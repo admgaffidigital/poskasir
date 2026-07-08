@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<html xmlns='http://www.w3.org/1999/xhtml' xmlns:b='http://www.google.com/2005/gml/b' xmlns:data='http://www.google.com/2005/gml/data' xmlns:expr='http://www.google.com/2005/gml/expr'>
+<!DOCTYPE html>
+<html lang="id">
 <head>
 <meta charset='UTF-8'/>
 <meta content='width=device-width, initial-scale=1.0' name='viewport'/>
-<title><data:blog.pageTitle/></title>
-<b:skin><![CDATA[
+<title>POS KASIR</title>
+<style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 .pk-root{font-family:'Inter',sans-serif;font-size:14px;color:#374151;max-width:100%;margin:0 auto;background:#f3f4f6;min-height:100vh;}
 .pk-root *{box-sizing:border-box;}
@@ -116,7 +117,7 @@
   #pk-receipt,#pk-receipt *{visibility:visible;}
   #pk-receipt{position:absolute;left:0;top:0;width:100%;}
 }
-]]></b:skin>
+</style>
 </head>
 <body>
 <div class='pk-root' id='pkRoot'>
@@ -1226,6 +1227,5 @@ function pkImportData(){
 /* ---------- START ---------- */
 pkBoot();
 //]]></script>
-<b:section class='main' id='main' maxwidgets='1' showaddelement='no'/>
 </body>
 </html>
