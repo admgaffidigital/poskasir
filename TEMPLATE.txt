@@ -1,0 +1,1231 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<html xmlns='http://www.w3.org/1999/xhtml' xmlns:b='http://www.google.com/2005/gml/b' xmlns:data='http://www.google.com/2005/gml/data' xmlns:expr='http://www.google.com/2005/gml/expr'>
+<head>
+<meta charset='UTF-8'/>
+<meta content='width=device-width, initial-scale=1.0' name='viewport'/>
+<title><data:blog.pageTitle/></title>
+<b:skin><![CDATA[
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+.pk-root{font-family:'Inter',sans-serif;font-size:14px;color:#374151;max-width:100%;margin:0 auto;background:#f3f4f6;min-height:100vh;}
+.pk-root *{box-sizing:border-box;}
+.pk-hidden{display:none !important;}
+
+/* Login Screen */
+#pkLoginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg, #064e3b 0%, #10b981 100%);padding:20px;}
+.pk-login-wrap{width:100%;max-width:420px;background:#ffffff;padding:48px 40px;border-radius:24px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.4);position:relative;overflow:hidden;}
+.pk-login-wrap::before{content:'';position:absolute;top:0;left:0;right:0;height:6px;background:linear-gradient(90deg, #34d399, #059669);}
+.pk-login-wrap h2{margin-top:0;margin-bottom:30px;text-align:center;color:#064e3b;font-weight:800;font-size:26px;letter-spacing:-0.5px;}
+.pk-field{margin-bottom:16px;}
+.pk-field label{display:block;margin-bottom:6px;font-weight:600;font-size:13px;color:#4b5563;}
+.pk-field input,.pk-field select,.pk-field textarea{width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;transition:border-color 0.2s, box-shadow 0.2s;font-family:inherit;}
+.pk-field input:focus,.pk-field select:focus,.pk-field textarea:focus{outline:none;border-color:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,0.2);}
+
+/* Buttons */
+.pk-btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 18px;border:none;border-radius:8px;background:#10b981;color:#fff;cursor:pointer;font-size:14px;font-weight:600;transition:all 0.2s ease;font-family:inherit;}
+.pk-btn:hover{background:#059669;box-shadow:0 4px 12px rgba(16,185,129,0.25);transform:translateY(-1px);}
+.pk-btn:active{transform:translateY(0);}
+.pk-btn-sec{background:#6b7280;}
+.pk-btn-sec:hover{background:#4b5563;box-shadow:0 4px 12px rgba(107,114,128,0.25);}
+.pk-btn-danger{background:#ef4444;}
+.pk-btn-danger:hover{background:#dc2626;box-shadow:0 4px 12px rgba(239,68,68,0.25);}
+.pk-btn-sm{padding:6px 12px;font-size:12px;border-radius:6px;}
+
+.pk-error{color:#ef4444;font-size:13px;margin-top:6px;font-weight:500;}
+
+/* Layout */
+.pk-shell{display:flex;min-height:100vh;flex-direction:column;}
+.pk-grid-menu{display:grid;grid-template-columns:repeat(auto-fill, minmax(160px, 1fr));gap:24px;margin-top:20px;}
+.pk-menu-box{background:#fff;border-radius:16px;padding:32px 16px;text-align:center;cursor:pointer;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);border:1px solid #e5e7eb;transition:all 0.2s ease;}
+.pk-menu-box:hover{transform:translateY(-4px);box-shadow:0 12px 20px -5px rgba(0,0,0,0.1);border-color:#10b981;}
+.pk-menu-icon{font-size:42px;margin-bottom:16px;}
+.pk-menu-title{font-weight:600;font-size:15px;color:#374151;}
+
+/* Topbar & Content */
+.pk-main-wrap{flex:1;display:flex;flex-direction:column;background:#f3f4f6;min-width:0;height:100vh;overflow-y:auto;}
+.pk-topbar{display:flex;justify-content:space-between;align-items:center;background:#fff;padding:16px 24px;border-bottom:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,0.02);position:sticky;top:0;z-index:5;}
+.pk-content{padding:24px;background:#fff;margin:24px;border-radius:12px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);border:1px solid #e5e7eb;}
+.pk-content h2{margin-top:0;font-size:22px;color:#111827;font-weight:700;margin-bottom:24px;}
+.pk-content h3{font-size:18px;color:#1f2937;font-weight:600;margin-bottom:16px;margin-top:24px;}
+
+/* Table */
+.pk-table{width:100%;border-collapse:separate;border-spacing:0;font-size:14px;margin-top:16px;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;}
+.pk-table th,.pk-table td{border-bottom:1px solid #e5e7eb;padding:12px 16px;text-align:left;}
+.pk-table th{background:#f9fafb;font-weight:600;color:#374151;text-transform:uppercase;font-size:12px;letter-spacing:0.5px;}
+.pk-table tr:last-child td{border-bottom:none;}
+.pk-table tr:hover td{background:#f9fafb;}
+
+/* Flex Grid */
+.pk-flex{display:flex;gap:16px;flex-wrap:wrap;}
+.pk-flex>div{flex:1;min-width:200px;}
+
+/* Dashboard Cards */
+.pk-card{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:24px;text-align:left;box-shadow:0 2px 4px rgba(0,0,0,0.02);transition:transform 0.2s, box-shadow 0.2s;}
+.pk-card:hover{transform:translateY(-2px);box-shadow:0 10px 15px -3px rgba(0,0,0,0.05);}
+.pk-card h4{margin:0 0 12px;font-size:13px;color:#6b7280;text-transform:uppercase;font-weight:600;letter-spacing:0.5px;}
+.pk-card .val{font-size:32px;font-weight:700;color:#10b981;}
+
+/* Tabs */
+.pk-tabs{display:flex;gap:16px;margin-bottom:24px;border-bottom:2px solid #e5e7eb;}
+.pk-tab{padding:10px 4px;cursor:pointer;font-size:14px;font-weight:500;color:#6b7280;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.2s;}
+.pk-tab:hover{color:#374151;}
+.pk-tab.active{border-bottom-color:#10b981;color:#10b981;}
+
+/* Badges */
+.pk-badge{display:inline-block;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600;}
+.pk-badge-red{background:#fee2e2;color:#b91c1c;}
+.pk-badge-green{background:#d1fae5;color:#047857;}
+.pk-badge-amber{background:#fef3c7;color:#b45309;}
+
+/* Cart */
+.pk-cart-row{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid #f3f4f6;font-size:14px;}
+.pk-cart-row span{flex:1;}
+.pk-cart-row:last-child{border-bottom:none;}
+.pk-search-box{padding:12px 16px;width:100%;border:1px solid #d1d5db;border-radius:8px;margin-bottom:16px;font-size:14px;transition:all 0.2s;font-family:inherit;}
+.pk-search-box:focus{outline:none;border-color:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,0.2);}
+
+/* Responsive / Mobile Friendly */
+@media (max-width: 768px) {
+  .pk-login-wrap{padding:30px 24px; border-radius:20px; max-width:90%;}
+  .pk-login-wrap h2{font-size:22px;}
+  .pk-topbar{padding:12px 16px; flex-direction:column; gap:12px; align-items:stretch;}
+  .pk-topbar > div{display:flex; justify-content:space-between; align-items:center;}
+  #pkStoreName{font-size:16px !important;}
+  .pk-content{margin:12px; padding:16px; border-radius:10px;}
+  .pk-content h2{font-size:20px; margin-bottom:16px;}
+  .pk-table{display:block; overflow-x:auto; white-space:nowrap;}
+  .pk-grid-menu{grid-template-columns:repeat(auto-fill, minmax(130px, 1fr)); gap:12px;}
+  .pk-menu-box{padding:20px 10px;}
+  .pk-menu-icon{font-size:32px; margin-bottom:12px;}
+  .pk-menu-title{font-size:13px;}
+  .pk-flex > div{min-width:100%;}
+  .pk-tabs{overflow-x:auto; white-space:nowrap; padding-bottom:4px;}
+  .pk-card{padding:16px;}
+  .pk-card .val{font-size:24px;}
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-track{background:#f3f4f6;}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px;}
+::-webkit-scrollbar-thumb:hover{background:#94a3b8;}
+
+/* Receipt Print */
+#pk-receipt{font-family:monospace;font-size:12px;width:280px;margin:0 auto;padding:10px;color:#000;background:#fff;}
+@media print{
+  body *{visibility:hidden;}
+  #pk-receipt,#pk-receipt *{visibility:visible;}
+  #pk-receipt{position:absolute;left:0;top:0;width:100%;}
+}
+]]></b:skin>
+</head>
+<body>
+<div class='pk-root' id='pkRoot'>
+
+  <!-- LOGIN SCREEN -->
+  <div id='pkLoginScreen'>
+    <div class='pk-login-wrap'>
+      <h2>Kasir Toko Bangunan</h2>
+      <div class='pk-field'>
+        <label>Username</label>
+        <input id='pkLoginUser' placeholder='admin' type='text'/>
+      </div>
+      <div class='pk-field'>
+        <label>Password</label>
+        <input id='pkLoginPass' placeholder='admin123' type='password'/>
+      </div>
+      <div class='pk-error' id='pkLoginError'/>
+      <button class='pk-btn' onclick='pkLogin()' style='width:100%'>Masuk</button>
+      <p style='font-size:11px;color:#888;margin-top:14px;text-align:center;'>
+        Akun demo: admin/admin123, kasir/kasir123
+      </p>
+    </div>
+  </div>
+
+  <!-- APP SHELL -->
+  <div class='pk-hidden' id='pkAppShell'>
+    <div class='pk-shell'>
+      <div class='pk-main-wrap'>
+        <div class='pk-topbar'>
+          <div style='display:flex;align-items:center;gap:16px;'>
+            <button id='pkBtnBack' class='pk-btn pk-btn-sec pk-btn-sm pk-hidden' onclick='pkNav("home")'>&#8592; Menu</button>
+            <div id='pkStoreName' style='font-weight:bold;font-size:18px;color:#111827;'/>
+          </div>
+          <div>
+            <span id='pkUserLabel' style='margin-right:16px;font-size:14px;font-weight:500;'/>
+            <button class='pk-btn pk-btn-danger pk-btn-sm' onclick='pkLogout()'>Keluar</button>
+          </div>
+        </div>
+        <div class='pk-content' id='pkMain'/>
+      </div>
+    </div>
+  </div>
+
+  <div class='pk-hidden' id='pk-receipt'/>
+</div>
+<script>//<![CDATA[
+/* =========================================================
+   POS KASIR TOKO BANGUNAN - Single file, client-side only
+   Data disimpan di localStorage. Backup/restore via JSON.
+   ========================================================= */
+const PK_KEY = 'posapp_data_v1';
+const PK_SESSION_KEY = 'posapp_session_v1';
+let DB = null;
+
+function pkNextId(entity){
+  DB.meta.nextId[entity] = (DB.meta.nextId[entity]||0)+1;
+  return DB.meta.nextId[entity];
+}
+function pkSave(){ localStorage.setItem(PK_KEY, JSON.stringify(DB)); }
+function pkLoad(){
+  const raw = localStorage.getItem(PK_KEY);
+  if(raw){ DB = JSON.parse(raw); return; }
+  pkSeed();
+}
+function pkSeed(){
+  DB = {
+    meta:{nextId:{}},
+    users:[
+      {id:1, nama:'Administrator', username:'admin', password:'admin123', role:'admin'},
+      {id:2, nama:'Kasir 1', username:'kasir', password:'kasir123', role:'kasir'}
+    ],
+    karyawan:[
+      {id:1, user_id:1, nama:'Administrator', jabatan:'Owner', no_hp:'-', alamat:'-', tanggal_masuk:'2024-01-01', gaji_pokok:0, status:'aktif'},
+      {id:2, user_id:2, nama:'Kasir 1', jabatan:'Kasir', no_hp:'-', alamat:'-', tanggal_masuk:'2024-01-01', gaji_pokok:0, status:'aktif'}
+    ],
+    kategori:[
+      {id:1, nama:'Semen & Bahan Bangunan'},
+      {id:2, nama:'Cat & Finishing'},
+      {id:3, nama:'Perkakas'}
+    ],
+    produk:[
+      {id:1, kode:'SM001', nama:'Semen 40kg', kategori_id:1, satuan:'sak', harga_beli:55000, harga_jual:62000, stok:100, stok_min:10, status:'aktif'},
+      {id:2, kode:'CT001', nama:'Cat Tembok 5kg', kategori_id:2, satuan:'kaleng', harga_beli:80000, harga_jual:95000, stok:40, stok_min:5, status:'aktif'},
+      {id:3, kode:'PK001', nama:'Palu Kambing', kategori_id:3, satuan:'pcs', harga_beli:25000, harga_jual:35000, stok:20, stok_min:3, status:'aktif'}
+    ],
+    pelanggan:[
+      {id:1, nama:'Pelanggan Umum', no_hp:'-', alamat:'-', tipe:'umum', poin:0}
+    ],
+    supplier:[
+      {id:1, nama:'CV Sumber Bangunan', kontak:'Pak Joko', no_hp:'0812xxxxxxx', alamat:'-'}
+    ],
+    transaksi:[], transaksiDetail:[],
+    pembelian:[], pembelianDetail:[],
+    hutang:[], piutang:[],
+    bayarHutang:[], bayarPiutang:[],
+    poinLog:[], stokLog:[],
+    pengaturan:{
+      nama_toko:'Toko Bangunan Jaya', alamat:'Jl. Contoh No. 1', no_telp:'0800-000-000',
+      email:'', npwp:'', pajak_persen:0, mata_uang:'Rp', footer_struk:'Terima kasih telah berbelanja',
+      poin_per_rupiah:10000, rupiah_per_poin:100, min_tukar_poin:10
+    }
+  };
+  DB.meta.nextId = {users:2, karyawan:2, kategori:3, produk:3, pelanggan:1, supplier:1,
+    transaksi:0, transaksiDetail:0, pembelian:0, pembelianDetail:0, hutang:0, piutang:0,
+    bayarHutang:0, bayarPiutang:0, poinLog:0, stokLog:0};
+  pkSave();
+}
+
+/* ---------- SESSION ---------- */
+function pkGetSession(){
+  const raw = sessionStorage.getItem(PK_SESSION_KEY);
+  return raw ? JSON.parse(raw) : null;
+}
+function pkLogin(){
+  const u = document.getElementById('pkLoginUser').value.trim();
+  const p = document.getElementById('pkLoginPass').value;
+  const user = DB.users.find(x=>x.username===u && x.password===p);
+  if(!user){
+    document.getElementById('pkLoginError').innerText = 'Username atau password salah';
+    return;
+  }
+  sessionStorage.setItem(PK_SESSION_KEY, JSON.stringify({id:user.id, nama:user.nama, role:user.role}));
+  pkBoot();
+}
+function pkLogout(){
+  sessionStorage.removeItem(PK_SESSION_KEY);
+  pkBoot();
+}
+
+/* ---------- MENU DEFINITION ---------- */
+const PK_MENUS = [
+  {key:'dashboard', label:'Dashboard', roles:['admin','kasir','gudang','keuangan','manager']},
+  {key:'transaksi', label:'Transaksi (Kasir)', roles:['admin','kasir']},
+  {key:'produk', label:'Produk & Kategori', roles:['admin','gudang','kasir']},
+  {key:'pelanggan', label:'Daftar Pelanggan', roles:['admin','kasir','manager']},
+  {key:'pembelian', label:'Pembelian', roles:['admin','gudang']},
+  {key:'supplier', label:'Daftar Supplier', roles:['admin','gudang']},
+  {key:'hutangpiutang', label:'Hutang & Piutang', roles:['admin','keuangan']},
+  {key:'loyalty', label:'Loyalty Poin', roles:['admin','manager']},
+  {key:'karyawan', label:'Karyawan', roles:['admin','manager']},
+  {key:'laporan', label:'Laporan', roles:['admin','manager','keuangan']},
+  {key:'pengaturan', label:'Pengaturan Toko', roles:['admin']},
+  {key:'backup', label:'Backup / Restore', roles:['admin']}
+];
+let pkCurrentView = 'home';
+let pkCart = [];
+
+/* ---------- BOOT ---------- */
+function pkBoot(){
+  pkLoad();
+  const session = pkGetSession();
+  if(!session){
+    document.getElementById('pkLoginScreen').classList.remove('pk-hidden');
+    document.getElementById('pkAppShell').classList.add('pk-hidden');
+    return;
+  }
+  document.getElementById('pkLoginScreen').classList.add('pk-hidden');
+  document.getElementById('pkAppShell').classList.remove('pk-hidden');
+  document.getElementById('pkStoreName').innerText = DB.pengaturan.nama_toko;
+  document.getElementById('pkUserLabel').innerText = session.nama + ' (' + session.role + ')';
+  pkNav(pkCurrentView);
+}
+function pkNav(view){
+  pkCurrentView = view;
+  const btnBack = document.getElementById('pkBtnBack');
+  if(btnBack){
+    if(view === 'home') btnBack.classList.add('pk-hidden');
+    else btnBack.classList.remove('pk-hidden');
+  }
+  const fn = 'pkView_' + view;
+  if(typeof window[fn] === 'function') window[fn]();
+}
+function pkView_home(){
+  const session = pkGetSession();
+  const menus = PK_MENUS.filter(m=>m.roles.includes(session.role));
+  const icons = {dashboard:'📊', transaksi:'🛒', produk:'📦', pelanggan:'👥', pembelian:'📥', supplier:'🏢', hutangpiutang:'💸', loyalty:'🎁', karyawan:'👔', laporan:'📈', pengaturan:'⚙️', backup:'💾'};
+  let html = '<h2>Menu Utama</h2><div class="pk-grid-menu">';
+  menus.forEach(m=>{
+    html += `<div class="pk-menu-box" onclick="pkNav('${m.key}')">
+      <div class="pk-menu-icon">${icons[m.key]||'📌'}</div>
+      <div class="pk-menu-title">${m.label}</div>
+    </div>`;
+  });
+  html += '</div>';
+  document.getElementById('pkMain').innerHTML = html;
+}
+function pkFmt(n){ return DB.pengaturan.mata_uang + ' ' + Number(n||0).toLocaleString('id-ID'); }
+function pkToday(){ return new Date().toISOString().slice(0,10); }
+
+/* ================= DASHBOARD ================= */
+function pkView_dashboard(){
+  const today = pkToday();
+  const todayTrans = DB.transaksi.filter(t=>t.tanggal.slice(0,10)===today);
+  const omzetToday = todayTrans.reduce((a,t)=>a+t.total,0);
+  const stokMenipis = DB.produk.filter(p=>p.stok <= p.stok_min);
+  const hutangJatuhTempo = DB.hutang.filter(h=>h.status!=='lunas' && h.jatuh_tempo && h.jatuh_tempo<=today);
+  const piutangJatuhTempo = DB.piutang.filter(p=>p.status!=='lunas' && p.jatuh_tempo && p.jatuh_tempo<=today);
+  document.getElementById('pkMain').innerHTML = `
+    <h2>Dashboard</h2>
+    <div class="pk-flex">
+      <div class="pk-card"><h4>Omzet Hari Ini</h4><div class="val">${pkFmt(omzetToday)}</div></div>
+      <div class="pk-card"><h4>Transaksi Hari Ini</h4><div class="val">${todayTrans.length}</div></div>
+      <div class="pk-card"><h4>Stok Menipis</h4><div class="val">${stokMenipis.length}</div></div>
+      <div class="pk-card"><h4>Hutang Jatuh Tempo</h4><div class="val">${hutangJatuhTempo.length}</div></div>
+      <div class="pk-card"><h4>Piutang Jatuh Tempo</h4><div class="val">${piutangJatuhTempo.length}</div></div>
+    </div>
+    ${stokMenipis.length ? `<h3 style="margin-top:20px;">Produk Stok Menipis</h3>
+    <table class="pk-table"><tr><th>Kode</th><th>Nama</th><th>Stok</th><th>Min</th></tr>
+    ${stokMenipis.map(p=>`<tr><td>${p.kode}</td><td>${p.nama}</td><td>${p.stok}</td><td>${p.stok_min}</td></tr>`).join('')}
+    </table>` : ''}
+  `;
+}
+
+/* ================= PRODUK & KATEGORI ================= */
+let pkProdukTab = 'produk';
+function pkView_produk(){
+  renderBody();
+  function renderBody(){
+    document.getElementById('pkMain').innerHTML = `
+      <h2>Produk & Kategori</h2>
+      <div class="pk-tabs">
+        <div class="pk-tab ${pkProdukTab==='produk'?'active':''}" onclick="pkProdukTab='produk';pkView_produk()">Produk</div>
+        <div class="pk-tab ${pkProdukTab==='kategori'?'active':''}" onclick="pkProdukTab='kategori';pkView_produk()">Kategori</div>
+      </div>
+      <div id="pkProdukBody"></div>
+    `;
+    if(pkProdukTab==='produk') pkRenderProdukList(); else pkRenderKategoriList();
+  }
+}
+function pkRenderKategoriList(){
+  document.getElementById('pkProdukBody').innerHTML = `
+    <div class="pk-flex">
+      <div>
+        <input class="pk-field" id="pkKatNama" placeholder="Nama kategori baru" style="padding:8px;width:100%;border:1px solid #ccc;border-radius:4px;">
+      </div>
+      <div style="flex:0 0 auto;"><button class="pk-btn" onclick="pkAddKategori()">Tambah</button></div>
+    </div>
+    <table class="pk-table"><tr><th>ID</th><th>Nama Kategori</th><th>Aksi</th></tr>
+    ${DB.kategori.map(k=>`<tr><td>${k.id}</td><td>${k.nama}</td>
+      <td><button class="pk-btn pk-btn-danger pk-btn-sm" onclick="pkDelKategori(${k.id})">Hapus</button></td></tr>`).join('')}
+    </table>
+  `;
+}
+function pkAddKategori(){
+  const nama = document.getElementById('pkKatNama').value.trim();
+  if(!nama) return;
+  DB.kategori.push({id:pkNextId('kategori'), nama});
+  pkSave(); pkRenderKategoriList();
+}
+function pkDelKategori(id){
+  if(DB.produk.some(p=>p.kategori_id===id)){ alert('Kategori masih dipakai produk, tidak bisa dihapus.'); return; }
+  DB.kategori = DB.kategori.filter(k=>k.id!==id);
+  pkSave(); pkRenderKategoriList();
+}
+let pkEditProdukId = null;
+function pkRenderProdukList(){
+  pkEditProdukId = null;
+  const opts = DB.kategori.map(k=>`<option value="${k.id}">${k.nama}</option>`).join('');
+  document.getElementById('pkProdukBody').innerHTML = `
+    <h3>Tambah Produk</h3>
+    <div class="pk-flex">
+      <div class="pk-field"><label>Kode/SKU</label><input id="pkPrKode" placeholder="Kosongkan u/ Auto"></div>
+      <div class="pk-field"><label>Nama</label><input id="pkPrNama"></div>
+      <div class="pk-field"><label>Kategori</label><select id="pkPrKategori">${opts}</select></div>
+      <div class="pk-field"><label>Satuan</label><input id="pkPrSatuan" placeholder="sak/pcs/kg"></div>
+    </div>
+    <div class="pk-flex">
+      <div class="pk-field"><label>Harga Beli</label><input type="number" id="pkPrHargaBeli"></div>
+      <div class="pk-field"><label>Harga Jual</label><input type="number" id="pkPrHargaJual"></div>
+      <div class="pk-field"><label>Harga Grosir</label><input type="number" id="pkPrHargaGrosir" placeholder="0 = tdk ada"></div>
+      <div class="pk-field"><label>Min. Qty Grosir</label><input type="number" step="0.01" id="pkPrMinGrosir" placeholder="0"></div>
+    </div>
+    <div class="pk-flex" style="align-items:center;margin-bottom:12px;">
+      <input type="checkbox" id="pkPrHasVarian" onchange="pkToggleVarian(this.checked)" style="margin-right:8px;transform:scale(1.2);">
+      <label for="pkPrHasVarian" style="font-weight:600;margin:0;">Produk ini memiliki Varian (Warna/Ukuran dll)</label>
+    </div>
+    <div id="pkPrStokBox" class="pk-flex">
+      <div class="pk-field"><label>Stok Awal</label><input type="number" step="0.01" id="pkPrStok" value="0"></div>
+      <div class="pk-field"><label>Stok Minimum</label><input type="number" step="0.01" id="pkPrStokMin" value="5"></div>
+    </div>
+    <div id="pkPrVarianBox" class="pk-hidden" style="background:#f9fafb;padding:12px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:16px;">
+      <p style="margin:0 0 8px;font-weight:600;">Daftar Varian</p>
+      <div id="pkVarianList"></div>
+      <button class="pk-btn pk-btn-sm" onclick="pkAddVarianRow()">+ Tambah Varian</button>
+    </div>
+    <button class="pk-btn" onclick="pkAddProduk()">Simpan Produk</button>
+    <h3 style="margin-top:20px;">Daftar Produk</h3>
+    <input class="pk-search-box" placeholder="Cari produk..." oninput="pkFilterProduk(this.value)">
+    <table class="pk-table" id="pkProdukTable"></table>
+  `;
+  pkFilterProduk('');
+}
+function pkToggleVarian(isVarian){
+  if(isVarian){
+    document.getElementById('pkPrStokBox').classList.add('pk-hidden');
+    document.getElementById('pkPrVarianBox').classList.remove('pk-hidden');
+    if(document.getElementById('pkVarianList').innerHTML.trim()===''){ pkAddVarianRow(); }
+  } else {
+    document.getElementById('pkPrStokBox').classList.remove('pk-hidden');
+    document.getElementById('pkPrVarianBox').classList.add('pk-hidden');
+  }
+}
+function pkAddVarianRow(){
+  const row = document.createElement('div');
+  row.className = 'pk-flex pk-varian-row';
+  row.style.marginBottom = '8px';
+  row.innerHTML = `
+    <input class="pkVarianNama" placeholder="Varian" style="flex:2;padding:6px;border:1px solid #ccc;border-radius:4px;">
+    <input type="number" step="0.01" class="pkVarianStok" placeholder="Stok" style="flex:1;padding:6px;border:1px solid #ccc;border-radius:4px;">
+    <input type="number" class="pkVarianHargaBeli" placeholder="Modal(opsional)" style="flex:1.5;padding:6px;border:1px solid #ccc;border-radius:4px;">
+    <input type="number" class="pkVarianHargaJual" placeholder="Jual(opsional)" style="flex:1.5;padding:6px;border:1px solid #ccc;border-radius:4px;">
+    <button class="pk-btn pk-btn-danger pk-btn-sm" onclick="this.parentNode.remove()">X</button>
+  `;
+  document.getElementById('pkVarianList').appendChild(row);
+}
+function pkFilterProduk(q){
+  q = q.toLowerCase();
+  const list = DB.produk.filter(p=>p.nama.toLowerCase().includes(q) || p.kode.toLowerCase().includes(q));
+  document.getElementById('pkProdukTable').innerHTML = `
+    <tr><th>Kode</th><th>Nama</th><th>Kategori</th><th>Satuan</th><th>Harga Jual</th><th>Stok</th><th>Aksi</th></tr>
+    ${list.map(p=>{
+      const kat = DB.kategori.find(k=>k.id===p.kategori_id);
+      let st = p.stok; let isLow = p.stok<=p.stok_min;
+      if(p.has_varian && p.varian){
+        st = p.varian.reduce((a,v)=>a+v.stok,0);
+        isLow = p.varian.some(v=>v.stok<=p.stok_min);
+      }
+      const grosirLabel = p.min_grosir > 0 ? `<br><small style="color:#059669;">Grosir: ${pkFmt(p.harga_grosir)} (&#8805;${p.min_grosir})</small>` : '';
+      return `<tr><td>${p.kode}</td><td>${p.nama}${grosirLabel}</td><td>${kat?kat.nama:'-'}</td><td>${p.satuan}</td>
+        <td>${pkFmt(p.harga_jual)}</td><td>${st} ${isLow?'<span class=\"pk-badge pk-badge-red\">Menipis</span>':''}</td>
+        <td>
+          <button class="pk-btn pk-btn-sm" style="background:#3b82f6;margin-right:4px;" onclick="pkLoadEditProduk(${p.id})">Edit</button>
+          <button class="pk-btn pk-btn-danger pk-btn-sm" onclick="pkDelProduk(${p.id})">Hapus</button>
+        </td></tr>`;
+    }).join('')}
+  `;
+}
+function pkAddProduk(){
+  let kode = document.getElementById('pkPrKode').value.trim();
+  const nama = document.getElementById('pkPrNama').value.trim();
+  if(!nama){ alert('Nama produk wajib diisi'); return; }
+  if(!kode){ kode = 'PRD' + Date.now().toString().slice(-6); }
+  const has_varian = document.getElementById('pkPrHasVarian').checked;
+  const varian = [];
+  if(has_varian){
+    document.querySelectorAll('.pk-varian-row').forEach(row=>{
+      const vn = row.querySelector('.pkVarianNama').value.trim();
+      const vs = Number(row.querySelector('.pkVarianStok').value||0);
+      const vhb = Number(row.querySelector('.pkVarianHargaBeli').value||0);
+      const vhj = Number(row.querySelector('.pkVarianHargaJual').value||0);
+      if(vn) varian.push({nama:vn, stok:vs, harga_beli:vhb, harga_jual:vhj});
+    });
+    if(!varian.length){ alert('Minimal isi 1 varian'); return; }
+  }
+  
+  if(pkEditProdukId){
+    const p = DB.produk.find(x=>x.id===pkEditProdukId);
+    if(p){
+      p.kode = kode; p.nama = nama;
+      p.kategori_id = Number(document.getElementById('pkPrKategori').value);
+      p.satuan = document.getElementById('pkPrSatuan').value || 'pcs';
+      p.harga_beli = Number(document.getElementById('pkPrHargaBeli').value||0);
+      p.harga_jual = Number(document.getElementById('pkPrHargaJual').value||0);
+      p.harga_grosir = Number(document.getElementById('pkPrHargaGrosir').value||0);
+      p.min_grosir = Number(document.getElementById('pkPrMinGrosir').value||0);
+      p.stok = Number(document.getElementById('pkPrStok').value||0);
+      p.stok_min = Number(document.getElementById('pkPrStokMin').value||0);
+      p.has_varian = has_varian; p.varian = varian;
+    }
+  } else {
+    DB.produk.push({
+      id: pkNextId('produk'), kode, nama,
+      kategori_id: Number(document.getElementById('pkPrKategori').value),
+      satuan: document.getElementById('pkPrSatuan').value || 'pcs',
+      harga_beli: Number(document.getElementById('pkPrHargaBeli').value||0),
+      harga_jual: Number(document.getElementById('pkPrHargaJual').value||0),
+      harga_grosir: Number(document.getElementById('pkPrHargaGrosir').value||0),
+      min_grosir: Number(document.getElementById('pkPrMinGrosir').value||0),
+      stok: Number(document.getElementById('pkPrStok').value||0),
+      stok_min: Number(document.getElementById('pkPrStokMin').value||0),
+      status:'aktif', has_varian, varian
+    });
+  }
+  pkSave(); pkRenderProdukList();
+}
+function pkLoadEditProduk(id){
+  const p = DB.produk.find(x=>x.id===id);
+  if(!p) return;
+  pkEditProdukId = id;
+  document.getElementById('pkPrKode').value = p.kode;
+  document.getElementById('pkPrNama').value = p.nama;
+  document.getElementById('pkPrKategori').value = p.kategori_id;
+  document.getElementById('pkPrSatuan').value = p.satuan;
+  document.getElementById('pkPrHargaBeli').value = p.harga_beli;
+  document.getElementById('pkPrHargaJual').value = p.harga_jual;
+  document.getElementById('pkPrHargaGrosir').value = p.harga_grosir;
+  document.getElementById('pkPrMinGrosir').value = p.min_grosir;
+  document.getElementById('pkPrStok').value = p.stok;
+  document.getElementById('pkPrStokMin').value = p.stok_min;
+  
+  document.getElementById('pkPrHasVarian').checked = p.has_varian;
+  pkToggleVarian(p.has_varian);
+  
+  if(p.has_varian && p.varian){
+    const list = document.getElementById('pkVarianList');
+    list.innerHTML = '';
+    p.varian.forEach(v=>{
+      pkAddVarianRow();
+      const rows = list.querySelectorAll('.pk-varian-row');
+      const last = rows[rows.length-1];
+      last.querySelector('.pkVarianNama').value = v.nama;
+      last.querySelector('.pkVarianStok').value = v.stok;
+      last.querySelector('.pkVarianHargaBeli').value = v.harga_beli || 0;
+      last.querySelector('.pkVarianHargaJual').value = v.harga_jual || 0;
+    });
+  }
+  
+  document.querySelector('#pkProdukBody h3').innerText = 'Edit Produk';
+  window.scrollTo(0,0);
+}
+function pkDelProduk(id){
+  const p = DB.produk.find(x=>x.id===id);
+  const used = DB.transaksiDetail.some(x=>x.produk_id===id) || DB.pembelianDetail.some(x=>x.produk_id===id);
+  if(used){
+    alert('Produk tidak dapat dihapus permanen karena ada riwayat transaksi. Status diubah menjadi Nonaktif.');
+    if(p) p.status = 'nonaktif';
+  } else {
+    DB.produk = DB.produk.filter(x=>x.id!==id);
+  }
+  pkSave(); pkRenderProdukList();
+}
+
+/* ================= TRANSAKSI (POS) ================= */
+function pkView_transaksi(){
+  pkCart = [];
+  pkRenderTransaksi();
+}
+function pkRenderTransaksi(){
+  const custOpts = DB.pelanggan.map(c=>`<option value="${c.id}">${c.nama} (poin: ${c.poin})</option>`).join('');
+  document.getElementById('pkMain').innerHTML = `
+    <h2>Transaksi Penjualan</h2>
+    <div class="pk-flex">
+      <div style="flex:2;">
+        <input class="pk-search-box" id="pkTrSearch" placeholder="Cari produk (nama/kode)..." oninput="pkTrSearchProduk(this.value)">
+        <div id="pkTrProdukList" style="max-height:220px;overflow:auto;border:1px solid #eee;padding:6px;"></div>
+      </div>
+      <div style="flex:1;min-width:260px;">
+        <label>Pelanggan</label>
+        <select id="pkTrPelanggan" style="width:100%;padding:6px;margin-bottom:10px;">${custOpts}</select>
+        <div id="pkCartBox"></div>
+        <div style="margin-top:10px;">
+          <label>Diskon (Rp)</label>
+          <input type="number" id="pkTrDiskon" value="0" oninput="pkRenderCart()" style="width:100%;padding:6px;">
+        </div>
+        <div style="margin-top:10px;">
+          <label>Metode Bayar</label>
+          <select id="pkTrMetode" style="width:100%;padding:6px;">
+            <option value="tunai">Tunai</option>
+            <option value="transfer">Transfer</option>
+            <option value="qris">QRIS</option>
+            <option value="piutang">Piutang (belum lunas)</option>
+          </select>
+        </div>
+        <div style="margin-top:14px;font-size:16px;font-weight:bold;">Total: <span id="pkTrTotal">Rp 0</span></div>
+        <button class="pk-btn" style="width:100%;margin-top:10px;" onclick="pkCheckout()">Proses & Cetak Struk</button>
+      </div>
+    </div>
+  `;
+  pkTrSearchProduk('');
+  pkRenderCart();
+}
+function pkTrSearchProduk(q){
+  q=q.toLowerCase();
+  const list = DB.produk.filter(p=>p.status==='aktif' && (p.nama.toLowerCase().includes(q)||p.kode.toLowerCase().includes(q)));
+  document.getElementById('pkTrProdukList').innerHTML = list.map(p=>{
+    let st = p.has_varian ? (p.varian||[]).reduce((a,v)=>a+v.stok,0) : p.stok;
+    return `
+    <div class="pk-cart-row">
+      <span>${p.nama} <small style="color:#888;">(stok:${st})</small></span>
+      <span>${pkFmt(p.harga_jual)}</span>
+      <button class="pk-btn pk-btn-sm" onclick="pkShowVarianModal(${p.id})">+ Tambah</button>
+    </div>
+  `}).join('') || '<p style="color:#888;">Produk tidak ditemukan</p>';
+}
+function pkShowVarianModal(id){
+  const p = DB.produk.find(x=>x.id===id);
+  if(!p) return;
+  if(p.has_varian && p.varian && p.varian.length > 0){
+    let opts = p.varian.map(v=>`<option value="${v.nama}">${v.nama} (Stok: ${v.stok})</option>`).join('');
+    let html = `
+      <div id="pkModalVarian" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:99;display:flex;align-items:center;justify-content:center;">
+        <div style="background:#fff;padding:24px;border-radius:12px;width:300px;box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+          <h3 style="margin-top:0;">Pilih Varian</h3>
+          <p style="margin-bottom:12px;">${p.nama}</p>
+          <select id="pkVarianSelect" style="width:100%;padding:8px;margin-bottom:16px;border:1px solid #ccc;border-radius:6px;">${opts}</select>
+          <div style="display:flex;gap:12px;">
+            <button class="pk-btn" style="flex:1;" onclick="pkConfirmVarian(${id})">Pilih</button>
+            <button class="pk-btn pk-btn-sec" style="flex:1;" onclick="document.getElementById('pkModalVarian').remove()">Batal</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', html);
+  } else {
+    pkAddToCart(id, '');
+  }
+}
+function pkConfirmVarian(id){
+  const v = document.getElementById('pkVarianSelect').value;
+  document.getElementById('pkModalVarian').remove();
+  pkAddToCart(id, v);
+}
+function pkAddToCart(id, varian=''){
+  const p = DB.produk.find(x=>x.id===id);
+  if(!p) return;
+  const v = (p.has_varian && varian) ? p.varian.find(x=>x.nama===varian) : null;
+  const stokMaks = v ? v.stok : p.stok;
+  if(stokMaks<=0){ alert('Stok habis'); return; }
+  
+  let hrgJual = p.harga_jual;
+  let hrgBeli = p.harga_beli;
+  if(v){
+    if(v.harga_jual > 0) hrgJual = v.harga_jual;
+    if(v.harga_beli > 0) hrgBeli = v.harga_beli;
+  }
+
+  const existing = pkCart.find(c=>c.produk_id===id && c.varian===varian);
+  if(existing){
+    if(existing.qty+1 > stokMaks){ alert('Stok tidak cukup'); return; }
+    existing.qty++;
+  } else {
+    pkCart.push({produk_id:id, nama:p.nama, varian:varian, harga:hrgJual, harga_beli:hrgBeli, hrg_jual_asli:hrgJual, is_custom_price:false, qty:1});
+  }
+  pkRenderCart();
+}
+function pkSetQty(id, varian, val){
+  const item = pkCart.find(c=>c.produk_id===id && c.varian===varian);
+  const p = DB.produk.find(x=>x.id===id);
+  if(!item || !p) return;
+  let qty = Number(val);
+  if(isNaN(qty) || qty <= 0){ pkCart = pkCart.filter(c=>!(c.produk_id===id && c.varian===varian)); }
+  else {
+    const stok = (p.has_varian && varian) ? p.varian.find(v=>v.nama===varian).stok : p.stok;
+    if(qty > stok) qty = stok;
+    item.qty = qty;
+  }
+  pkRenderCart();
+}
+function pkSetHarga(id, varian, val){
+  const item = pkCart.find(c=>c.produk_id===id && c.varian===varian);
+  if(!item) return;
+  let baru = Number(val);
+  if(isNaN(baru)) baru = item.hrg_jual_asli;
+  if(baru < item.harga_beli){
+    alert(`Harga tidak boleh di bawah modal (Rp ${item.harga_beli.toLocaleString('id-ID')})`);
+    baru = item.harga_beli;
+  }
+  item.harga = baru;
+  item.is_custom_price = true;
+  pkRenderCart();
+}
+function pkRenderCart(){
+  pkCart.forEach(c=>{
+    if(!c.is_custom_price){
+      const p = DB.produk.find(x=>x.id===c.produk_id);
+      if(p && p.min_grosir > 0 && c.qty >= p.min_grosir){
+        c.harga = p.harga_grosir;
+      } else {
+        c.harga = c.hrg_jual_asli;
+      }
+    }
+  });
+  const subtotal = pkCart.reduce((a,c)=>a+c.harga*c.qty,0);
+  const diskon = Number(document.getElementById('pkTrDiskon')?.value||0);
+  const total = Math.max(0, subtotal - diskon);
+  document.getElementById('pkCartBox').innerHTML = pkCart.length ? pkCart.map((c,i)=>`
+    <div class="pk-cart-row" style="flex-wrap:wrap;">
+      <div style="flex:1;min-width:120px;">${c.nama} ${c.varian ? `<br><small style="color:#047857">${c.varian}</small>` : ''}</div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <input type="number" step="0.01" style="width:60px;padding:6px;border:1px solid #ccc;border-radius:4px;" value="${c.qty}" onchange="pkSetQty(${c.produk_id}, '${c.varian||''}', this.value)" title="Qty">
+        <span style="color:#888;">x</span>
+        <input type="number" style="width:90px;padding:6px;border:1px solid #ccc;border-radius:4px;" value="${c.harga}" onchange="pkSetHarga(${c.produk_id}, '${c.varian||''}', this.value)" title="Harga Satuan">
+      </div>
+      <div style="text-align:right;width:80px;font-weight:600;">${pkFmt(c.harga*c.qty)}</div>
+    </div>
+  `).join('') : '<p style="color:#888;">Keranjang kosong</p>';
+  const totalEl = document.getElementById('pkTrTotal');
+  if(totalEl) totalEl.innerText = pkFmt(total);
+}
+function pkCheckout(){
+  if(!pkCart.length){ alert('Keranjang masih kosong'); return; }
+  const session = pkGetSession();
+  const pelangganId = Number(document.getElementById('pkTrPelanggan').value);
+  const diskon = Number(document.getElementById('pkTrDiskon').value||0);
+  const metode = document.getElementById('pkTrMetode').value;
+  const subtotal = pkCart.reduce((a,c)=>a+c.harga*c.qty,0);
+  const total = Math.max(0, subtotal - diskon);
+  const now = new Date().toISOString();
+  const pelanggan = DB.pelanggan.find(c=>c.id===pelangganId);
+
+  let poinDidapat = 0;
+  if(pelanggan && pelanggan.tipe==='member' && metode!=='piutang'){
+    poinDidapat = Math.floor(total / DB.pengaturan.poin_per_rupiah);
+  }
+
+  const trId = pkNextId('transaksi');
+  const noTrans = 'TRX-' + trId.toString().padStart(5,'0');
+  DB.transaksi.push({
+    id:trId, no:noTrans, tanggal:now, pelanggan_id:pelangganId, kasir_id:session.id,
+    subtotal, diskon, total, metode_bayar:metode,
+    status_bayar: metode==='piutang' ? 'belum_lunas' : 'lunas', poin_didapat:poinDidapat
+  });
+
+  pkCart.forEach(c=>{
+    const itemName = c.varian ? `${c.nama} - ${c.varian}` : c.nama;
+    DB.transaksiDetail.push({id:pkNextId('transaksiDetail'), transaksi_id:trId, produk_id:c.produk_id, nama_item:itemName, qty:c.qty, harga:c.harga, subtotal:c.harga*c.qty});
+    const p = DB.produk.find(x=>x.id===c.produk_id);
+    if(p.has_varian && c.varian){
+      const v = p.varian.find(x=>x.nama===c.varian);
+      if(v) v.stok -= c.qty;
+    } else {
+      p.stok -= c.qty;
+    }
+    DB.stokLog.push({id:pkNextId('stokLog'), produk_id:c.produk_id, varian:c.varian, jenis:'keluar', qty:c.qty, referensi:noTrans, tanggal:now, keterangan:'Penjualan'});
+  });
+
+  if(metode==='piutang'){
+    DB.piutang.push({id:pkNextId('piutang'), pelanggan_id:pelangganId, transaksi_id:trId, jumlah:total, sisa:total, jatuh_tempo:'', status:'belum_lunas'});
+  }
+  if(poinDidapat>0){
+    pelanggan.poin += poinDidapat;
+    DB.poinLog.push({id:pkNextId('poinLog'), pelanggan_id:pelangganId, transaksi_id:trId, jenis:'dapat', jumlah:poinDidapat, tanggal:now, keterangan:'Dari transaksi '+noTrans});
+  }
+  pkSave();
+  pkCetakStruk(trId);
+  pkCart = [];
+  pkRenderTransaksi();
+}
+function pkCetakStruk(trId){
+  const t = DB.transaksi.find(x=>x.id===trId);
+  const items = DB.transaksiDetail.filter(d=>d.transaksi_id===trId);
+  const s = DB.pengaturan;
+  let html = `<div>${s.nama_toko}<br>${s.alamat}<br>${s.no_telp}</div><hr>`;
+  html += `No: ${t.no}<br>Tgl: ${t.tanggal.slice(0,19).replace('T',' ')}<br><hr>`;
+  items.forEach(i=>{
+    const nama = i.nama_item || (DB.produk.find(x=>x.id===i.produk_id)?.nama) || '-';
+    html += `${nama}<br>${i.qty} x ${pkFmt(i.harga)} = ${pkFmt(i.subtotal)}<br>`;
+  });
+  html += `<hr>Subtotal: ${pkFmt(t.subtotal)}<br>Diskon: ${pkFmt(t.diskon)}<br><b>Total: ${pkFmt(t.total)}</b><br>Bayar: ${t.metode_bayar}<br><hr>${s.footer_struk}`;
+  const r = document.getElementById('pk-receipt');
+  r.innerHTML = html;
+  r.classList.remove('pk-hidden');
+  window.print();
+  r.classList.add('pk-hidden');
+}
+
+/* ================= PELANGGAN ================= */
+let pkEditPelangganId = null;
+function pkView_pelanggan(){
+  pkEditPelangganId = null;
+  document.getElementById('pkMain').innerHTML = `
+    <h2 id="pkPlTitle">Tambah Pelanggan</h2>
+    <div class="pk-flex">
+      <div class="pk-field"><label>Nama</label><input id="pkPlNama"></div>
+      <div class="pk-field"><label>No HP</label><input id="pkPlHp"></div>
+      <div class="pk-field"><label>Tipe</label>
+        <select id="pkPlTipe"><option value="umum">Umum</option><option value="member">Member</option></select>
+      </div>
+    </div>
+    <button class="pk-btn" onclick="pkAddPelanggan()">Simpan Pelanggan</button>
+    <h3 style="margin-top:24px;">Daftar Pelanggan</h3>
+    <table class="pk-table" style="margin-top:16px;">
+      <tr><th>Nama</th><th>No HP</th><th>Tipe</th><th>Poin</th><th>Aksi</th></tr>
+      ${DB.pelanggan.map(c=>`<tr><td>${c.nama}</td><td>${c.no_hp}</td><td>${c.tipe}</td><td>${c.poin}</td>
+        <td>
+          <button class="pk-btn pk-btn-sm" style="background:#3b82f6;margin-right:4px;" onclick="pkLoadEditPelanggan(${c.id})">Edit</button>
+          <button class="pk-btn pk-btn-danger pk-btn-sm" onclick="pkDelPelanggan(${c.id})">Hapus</button>
+        </td></tr>`).join('')}
+    </table>
+  `;
+}
+function pkAddPelanggan(){
+  const nama = document.getElementById('pkPlNama').value.trim();
+  if(!nama) return;
+  if(pkEditPelangganId){
+    const c = DB.pelanggan.find(x=>x.id===pkEditPelangganId);
+    if(c){
+      c.nama = nama;
+      c.no_hp = document.getElementById('pkPlHp').value;
+      c.tipe = document.getElementById('pkPlTipe').value;
+    }
+    pkEditPelangganId = null;
+  } else {
+    DB.pelanggan.push({id:pkNextId('pelanggan'), nama, no_hp:document.getElementById('pkPlHp').value,
+      alamat:'', tipe:document.getElementById('pkPlTipe').value, poin:0});
+  }
+  pkSave(); pkView_pelanggan();
+}
+function pkLoadEditPelanggan(id){
+  const c = DB.pelanggan.find(x=>x.id===id);
+  if(!c) return;
+  pkEditPelangganId = id;
+  document.getElementById('pkPlNama').value = c.nama;
+  document.getElementById('pkPlHp').value = c.no_hp;
+  document.getElementById('pkPlTipe').value = c.tipe;
+  document.getElementById('pkPlTitle').innerText = 'Edit Pelanggan';
+  window.scrollTo(0,0);
+}
+function pkDelPelanggan(id){
+  if(DB.transaksi.some(t=>t.pelanggan_id===id) || DB.piutang.some(p=>p.pelanggan_id===id)){
+    alert('Pelanggan tidak bisa dihapus karena memiliki riwayat transaksi/piutang.'); return;
+  }
+  DB.pelanggan = DB.pelanggan.filter(c=>c.id!==id);
+  pkSave(); pkView_pelanggan();
+}
+
+/* ================= SUPPLIER ================= */
+let pkEditSupplierId = null;
+function pkView_supplier(){
+  pkEditSupplierId = null;
+  document.getElementById('pkMain').innerHTML = `
+    <h2 id="pkSpTitle">Tambah Supplier</h2>
+    <div class="pk-flex">
+      <div class="pk-field"><label>Nama Supplier</label><input id="pkSpNama"></div>
+      <div class="pk-field"><label>Kontak</label><input id="pkSpKontak"></div>
+      <div class="pk-field"><label>No HP</label><input id="pkSpHp"></div>
+    </div>
+    <button class="pk-btn" onclick="pkAddSupplier()">Simpan Supplier</button>
+    <h3 style="margin-top:24px;">Daftar Supplier</h3>
+    <table class="pk-table" style="margin-top:16px;">
+      <tr><th>Nama</th><th>Kontak</th><th>No HP</th><th>Aksi</th></tr>
+      ${DB.supplier.map(s=>`<tr><td>${s.nama}</td><td>${s.kontak}</td><td>${s.no_hp}</td>
+        <td>
+          <button class="pk-btn pk-btn-sm" style="background:#3b82f6;margin-right:4px;" onclick="pkLoadEditSupplier(${s.id})">Edit</button>
+          <button class="pk-btn pk-btn-danger pk-btn-sm" onclick="pkDelSupplier(${s.id})">Hapus</button>
+        </td></tr>`).join('')}
+    </table>
+  `;
+}
+function pkAddSupplier(){
+  const nama = document.getElementById('pkSpNama').value.trim();
+  if(!nama) return;
+  if(pkEditSupplierId){
+    const s = DB.supplier.find(x=>x.id===pkEditSupplierId);
+    if(s){
+      s.nama = nama;
+      s.kontak = document.getElementById('pkSpKontak').value;
+      s.no_hp = document.getElementById('pkSpHp').value;
+    }
+    pkEditSupplierId = null;
+  } else {
+    DB.supplier.push({id:pkNextId('supplier'), nama, kontak:document.getElementById('pkSpKontak').value,
+      no_hp:document.getElementById('pkSpHp').value, alamat:''});
+  }
+  pkSave(); pkView_supplier();
+}
+function pkLoadEditSupplier(id){
+  const s = DB.supplier.find(x=>x.id===id);
+  if(!s) return;
+  pkEditSupplierId = id;
+  document.getElementById('pkSpNama').value = s.nama;
+  document.getElementById('pkSpKontak').value = s.kontak;
+  document.getElementById('pkSpHp').value = s.no_hp;
+  document.getElementById('pkSpTitle').innerText = 'Edit Supplier';
+  window.scrollTo(0,0);
+}
+function pkDelSupplier(id){
+  if(DB.pembelian.some(p=>p.supplier_id===id) || DB.hutang.some(h=>h.supplier_id===id)){
+    alert('Supplier tidak bisa dihapus karena memiliki riwayat pembelian/hutang.'); return;
+  }
+  DB.supplier = DB.supplier.filter(s=>s.id!==id);
+  pkSave(); pkView_supplier();
+}
+
+/* ================= PEMBELIAN ================= */
+let pkPembelianCart = [];
+function pkView_pembelian(){
+  pkPembelianCart = [];
+  pkRenderPembelian();
+}
+function pkRenderPembelian(){
+  const supOpts = DB.supplier.map(s=>`<option value="${s.id}">${s.nama}</option>`).join('');
+  const prodOpts = DB.produk.filter(p=>p.status==='aktif').map(p=>`<option value="${p.id}">${p.nama}</option>`).join('');
+  document.getElementById('pkMain').innerHTML = `
+    <h2>Pembelian ke Supplier</h2>
+    <div class="pk-flex">
+      <div class="pk-field"><label>Supplier</label><select id="pkPbSupplier">${supOpts}</select></div>
+      <div class="pk-field"><label>Jatuh Tempo</label><input type="date" id="pkPbJatuhTempo"></div>
+      <div class="pk-field"><label>Status Bayar</label>
+        <select id="pkPbStatusBayar"><option value="lunas">Lunas</option><option value="hutang">Belum Lunas (Hutang)</option></select>
+      </div>
+    </div>
+    <div class="pk-flex" style="align-items:flex-end;">
+      <div class="pk-field" style="flex:2;"><label>Produk</label>
+        <select id="pkPbProduk" onchange="pkPbCheckVarian()"><option value="">-- Pilih Produk --</option>${prodOpts}</select>
+      </div>
+      <div class="pk-field pk-hidden" id="pkPbVarianBox" style="flex:1;"><label>Varian</label>
+        <select id="pkPbVarian"></select>
+      </div>
+      <div class="pk-field" style="flex:1;"><label>Qty</label><input type="number" step="0.01" id="pkPbQty" value="1"></div>
+      <div class="pk-field" style="flex:1.5;"><label>Hrg Beli Satuan</label><input type="number" id="pkPbHarga"></div>
+      <div class="pk-field"><button class="pk-btn" onclick="pkAddPembelianItem()">+ Tambah</button></div>
+    </div>
+    <table class="pk-table"><tr><th>Produk</th><th>Qty</th><th>Harga</th><th>Subtotal</th></tr>
+      ${pkPembelianCart.map(i=>`<tr><td>${i.nama} ${i.varian?`<small>(${i.varian})</small>`:''}</td><td>${i.qty}</td><td>${pkFmt(i.harga)}</td><td>${pkFmt(i.qty*i.harga)}</td></tr>`).join('')}
+    </table>
+    <p><b>Total: ${pkFmt(pkPembelianCart.reduce((a,i)=>a+i.qty*i.harga,0))}</b></p>
+    <button class="pk-btn" onclick="pkSimpanPembelian()">Simpan & Terima Barang (Update Stok)</button>
+    <h3 style="margin-top:24px;">Riwayat Pembelian</h3>
+    <table class="pk-table"><tr><th>No</th><th>Supplier</th><th>Total</th><th>Status Bayar</th></tr>
+      ${DB.pembelian.map(p=>{
+        const s = DB.supplier.find(x=>x.id===p.supplier_id);
+        return `<tr><td>${p.no}</td><td>${s?s.nama:'-'}</td><td>${pkFmt(p.total)}</td><td>${p.status_bayar}</td></tr>`;
+      }).join('')}
+    </table>
+  `;
+}
+function pkPbCheckVarian(){
+  const pid = Number(document.getElementById('pkPbProduk').value);
+  const p = DB.produk.find(x=>x.id===pid);
+  const box = document.getElementById('pkPbVarianBox');
+  const sel = document.getElementById('pkPbVarian');
+  const hrg = document.getElementById('pkPbHarga');
+  sel.innerHTML = '';
+  if(p && p.has_varian && p.varian && p.varian.length){
+    sel.innerHTML = p.varian.map(v=>`<option value="${v.nama}">${v.nama}</option>`).join('');
+    box.classList.remove('pk-hidden');
+    hrg.value = p.varian[0].harga_beli || p.harga_beli || 0;
+  } else {
+    box.classList.add('pk-hidden');
+    if(p) hrg.value = p.harga_beli || 0;
+  }
+}
+function pkAddPembelianItem(){
+  const produkId = Number(document.getElementById('pkPbProduk').value);
+  const qty = Number(document.getElementById('pkPbQty').value||0);
+  const harga = Number(document.getElementById('pkPbHarga').value||0);
+  if(!produkId || !qty || !harga){ alert('Pilih produk, isi qty dan harga'); return; }
+  const p = DB.produk.find(x=>x.id===produkId);
+  let varian = '';
+  if(p.has_varian){
+    varian = document.getElementById('pkPbVarian').value;
+    if(!varian){ alert('Pilih varian'); return; }
+  }
+  pkPembelianCart.push({produk_id:produkId, nama:p.nama, varian:varian, qty, harga});
+  pkRenderPembelian();
+}
+function pkSimpanPembelian(){
+  if(!pkPembelianCart.length){ alert('Belum ada item'); return; }
+  const session = pkGetSession();
+  const supplierId = Number(document.getElementById('pkPbSupplier').value);
+  const jatuhTempo = document.getElementById('pkPbJatuhTempo').value;
+  const statusBayar = document.getElementById('pkPbStatusBayar').value;
+  const total = pkPembelianCart.reduce((a,i)=>a+i.qty*i.harga,0);
+  const now = new Date().toISOString();
+  const pbId = pkNextId('pembelian');
+  const noPb = 'PB-' + pbId.toString().padStart(5,'0');
+  DB.pembelian.push({id:pbId, no:noPb, tanggal:now, supplier_id:supplierId, user_id:session.id,
+    total, status:'diterima', status_bayar:statusBayar, jatuh_tempo:jatuhTempo});
+  pkPembelianCart.forEach(i=>{
+    DB.pembelianDetail.push({id:pkNextId('pembelianDetail'), pembelian_id:pbId, produk_id:i.produk_id, varian:i.varian, qty:i.qty, harga:i.harga, subtotal:i.qty*i.harga});
+    const p = DB.produk.find(x=>x.id===i.produk_id);
+    if(p.has_varian && i.varian){
+      const v = p.varian.find(x=>x.nama===i.varian);
+      if(v){ v.stok += i.qty; v.harga_beli = i.harga; }
+    } else {
+      p.stok += i.qty;
+      p.harga_beli = i.harga;
+    }
+    DB.stokLog.push({id:pkNextId('stokLog'), produk_id:i.produk_id, varian:i.varian, jenis:'masuk', qty:i.qty, referensi:noPb, tanggal:now, keterangan:'Pembelian'});
+  });
+  if(statusBayar==='hutang'){
+    DB.hutang.push({id:pkNextId('hutang'), supplier_id:supplierId, pembelian_id:pbId, jumlah:total, sisa:total, jatuh_tempo:jatuhTempo, status:'belum_lunas'});
+  }
+  pkSave();
+  pkPembelianCart = [];
+  pkRenderPembelian();
+}
+
+/* ================= HUTANG & PIUTANG ================= */
+let pkHpTab = 'hutang';
+function pkView_hutangpiutang(){
+  renderShell();
+  function renderShell(){
+    document.getElementById('pkMain').innerHTML = `
+      <h2>Hutang & Piutang</h2>
+      <div class="pk-tabs">
+        <div class="pk-tab ${pkHpTab==='hutang'?'active':''}" onclick="pkHpTab='hutang';pkView_hutangpiutang()">Hutang (ke Supplier)</div>
+        <div class="pk-tab ${pkHpTab==='piutang'?'active':''}" onclick="pkHpTab='piutang';pkView_hutangpiutang()">Piutang (dari Pelanggan)</div>
+      </div>
+      <div id="pkHpBody"></div>
+    `;
+    if(pkHpTab==='hutang') pkRenderHutang(); else pkRenderPiutang();
+  }
+}
+function pkRenderHutang(){
+  document.getElementById('pkHpBody').innerHTML = `
+    <table class="pk-table"><tr><th>Supplier</th><th>Jumlah</th><th>Sisa</th><th>Jatuh Tempo</th><th>Status</th><th>Bayar</th></tr>
+    ${DB.hutang.map(h=>{
+      const s = DB.supplier.find(x=>x.id===h.supplier_id);
+      return `<tr><td>${s?s.nama:'-'}</td><td>${pkFmt(h.jumlah)}</td><td>${pkFmt(h.sisa)}</td><td>${h.jatuh_tempo||'-'}</td>
+        <td><span class="pk-badge ${h.status==='lunas'?'pk-badge-green':'pk-badge-red'}">${h.status}</span></td>
+        <td>${h.status!=='lunas'?`<input type="number" placeholder="jumlah" id="pkBayarH${h.id}" style="width:90px;">
+        <button class="pk-btn pk-btn-sm" onclick="pkBayarHutang(${h.id})">Bayar</button>`:'-'}</td></tr>`;
+    }).join('') || '<tr><td colspan="6">Belum ada hutang</td></tr>'}
+    </table>
+  `;
+}
+function pkBayarHutang(hutangId){
+  const h = DB.hutang.find(x=>x.id===hutangId);
+  const jumlah = Number(document.getElementById('pkBayarH'+hutangId).value||0);
+  if(jumlah<=0 || jumlah>h.sisa){ alert('Jumlah bayar tidak valid'); return; }
+  h.sisa -= jumlah;
+  if(h.sisa<=0) h.status='lunas'; else h.status='sebagian';
+  DB.bayarHutang.push({id:pkNextId('bayarHutang'), hutang_id:hutangId, tanggal:new Date().toISOString(), jumlah, keterangan:''});
+  pkSave(); pkRenderHutang();
+}
+function pkRenderPiutang(){
+  document.getElementById('pkHpBody').innerHTML = `
+    <table class="pk-table"><tr><th>Pelanggan</th><th>Jumlah</th><th>Sisa</th><th>Status</th><th>Bayar</th></tr>
+    ${DB.piutang.map(p=>{
+      const c = DB.pelanggan.find(x=>x.id===p.pelanggan_id);
+      return `<tr><td>${c?c.nama:'-'}</td><td>${pkFmt(p.jumlah)}</td><td>${pkFmt(p.sisa)}</td>
+        <td><span class="pk-badge ${p.status==='lunas'?'pk-badge-green':'pk-badge-red'}">${p.status}</span></td>
+        <td>${p.status!=='lunas'?`<input type="number" placeholder="jumlah" id="pkBayarP${p.id}" style="width:90px;">
+        <button class="pk-btn pk-btn-sm" onclick="pkBayarPiutang(${p.id})">Bayar</button>`:'-'}</td></tr>`;
+    }).join('') || '<tr><td colspan="5">Belum ada piutang</td></tr>'}
+    </table>
+  `;
+}
+function pkBayarPiutang(piutangId){
+  const p = DB.piutang.find(x=>x.id===piutangId);
+  const jumlah = Number(document.getElementById('pkBayarP'+piutangId).value||0);
+  if(jumlah<=0 || jumlah>p.sisa){ alert('Jumlah bayar tidak valid'); return; }
+  p.sisa -= jumlah;
+  if(p.sisa<=0) p.status='lunas'; else p.status='sebagian';
+  DB.bayarPiutang.push({id:pkNextId('bayarPiutang'), piutang_id:piutangId, tanggal:new Date().toISOString(), jumlah, keterangan:''});
+  pkSave(); pkRenderPiutang();
+}
+
+/* ================= LOYALTY POIN ================= */
+function pkView_loyalty(){
+  const s = DB.pengaturan;
+  document.getElementById('pkMain').innerHTML = `
+    <h2>Loyalty Poin Pelanggan</h2>
+    <div class="pk-flex">
+      <div class="pk-field"><label>Nominal belanja per 1 poin (Rp)</label><input type="number" id="pkLoyPerRp" value="${s.poin_per_rupiah}"></div>
+      <div class="pk-field"><label>Nilai 1 poin (Rp)</label><input type="number" id="pkLoyRpPerPoin" value="${s.rupiah_per_poin}"></div>
+      <div class="pk-field"><label>Minimum poin untuk ditukar</label><input type="number" id="pkLoyMin" value="${s.min_tukar_poin}"></div>
+    </div>
+    <button class="pk-btn" onclick="pkSaveLoyalty()">Simpan Pengaturan</button>
+    <h3 style="margin-top:20px;">Riwayat Poin</h3>
+    <table class="pk-table"><tr><th>Pelanggan</th><th>Jenis</th><th>Jumlah</th><th>Tanggal</th><th>Keterangan</th></tr>
+      ${DB.poinLog.slice().reverse().map(l=>{
+        const c = DB.pelanggan.find(x=>x.id===l.pelanggan_id);
+        return `<tr><td>${c?c.nama:'-'}</td><td>${l.jenis}</td><td>${l.jumlah}</td><td>${l.tanggal.slice(0,10)}</td><td>${l.keterangan}</td></tr>`;
+      }).join('') || '<tr><td colspan="5">Belum ada riwayat poin</td></tr>'}
+    </table>
+  `;
+}
+function pkSaveLoyalty(){
+  DB.pengaturan.poin_per_rupiah = Number(document.getElementById('pkLoyPerRp').value||10000);
+  DB.pengaturan.rupiah_per_poin = Number(document.getElementById('pkLoyRpPerPoin').value||100);
+  DB.pengaturan.min_tukar_poin = Number(document.getElementById('pkLoyMin').value||10);
+  pkSave();
+  alert('Pengaturan poin disimpan');
+}
+
+/* ================= KARYAWAN ================= */
+function pkView_karyawan(){
+  document.getElementById('pkMain').innerHTML = `
+    <h2>Karyawan</h2>
+    <div class="pk-flex">
+      <div class="pk-field"><label>Nama</label><input id="pkKyNama"></div>
+      <div class="pk-field"><label>Jabatan</label><input id="pkKyJabatan"></div>
+      <div class="pk-field"><label>No HP</label><input id="pkKyHp"></div>
+      <div class="pk-field"><label>Gaji Pokok</label><input type="number" id="pkKyGaji"></div>
+    </div>
+    <button class="pk-btn" onclick="pkAddKaryawan()">Tambah Karyawan</button>
+    <table class="pk-table" style="margin-top:16px;">
+      <tr><th>Nama</th><th>Jabatan</th><th>No HP</th><th>Gaji Pokok</th><th>Status</th><th>Aksi</th></tr>
+      ${DB.karyawan.map(k=>`<tr><td>${k.nama}</td><td>${k.jabatan}</td><td>${k.no_hp}</td><td>${pkFmt(k.gaji_pokok)}</td><td>${k.status}</td>
+        <td><button class="pk-btn pk-btn-danger pk-btn-sm" onclick="pkDelKaryawan(${k.id})">Hapus</button></td></tr>`).join('')}
+    </table>
+  `;
+}
+function pkAddKaryawan(){
+  const nama = document.getElementById('pkKyNama').value.trim();
+  if(!nama) return;
+  DB.karyawan.push({id:pkNextId('karyawan'), user_id:null, nama, jabatan:document.getElementById('pkKyJabatan').value,
+    no_hp:document.getElementById('pkKyHp').value, alamat:'', tanggal_masuk:pkToday(),
+    gaji_pokok:Number(document.getElementById('pkKyGaji').value||0), status:'aktif'});
+  pkSave(); pkView_karyawan();
+}
+function pkDelKaryawan(id){
+  DB.karyawan = DB.karyawan.filter(k=>k.id!==id);
+  pkSave(); pkView_karyawan();
+}
+
+/* ================= LAPORAN ================= */
+function pkView_laporan(){
+  document.getElementById('pkMain').innerHTML = `
+    <h2>Laporan</h2>
+    <div class="pk-flex">
+      <div class="pk-field"><label>Dari Tanggal</label><input type="date" id="pkLapDari"></div>
+      <div class="pk-field"><label>Sampai Tanggal</label><input type="date" id="pkLapSampai"></div>
+      <div style="align-self:flex-end;"><button class="pk-btn" onclick="pkRunLaporan()">Tampilkan</button></div>
+    </div>
+    <div id="pkLapResult"></div>
+  `;
+}
+function pkRunLaporan(){
+  const dari = document.getElementById('pkLapDari').value;
+  const sampai = document.getElementById('pkLapSampai').value;
+  const list = DB.transaksi.filter(t=>{
+    const d = t.tanggal.slice(0,10);
+    return (!dari || d>=dari) && (!sampai || d<=sampai);
+  });
+  const totalOmzet = list.reduce((a,t)=>a+t.total,0);
+  document.getElementById('pkLapResult').innerHTML = `
+    <div class="pk-flex">
+      <div class="pk-card"><h4>Total Transaksi</h4><div class="val">${list.length}</div></div>
+      <div class="pk-card"><h4>Total Omzet</h4><div class="val">${pkFmt(totalOmzet)}</div></div>
+    </div>
+    <table class="pk-table" style="margin-top:16px;">
+      <tr><th>No</th><th>Tanggal</th><th>Total</th><th>Metode</th><th>Status</th></tr>
+      ${list.map(t=>`<tr><td>${t.no}</td><td>${t.tanggal.slice(0,10)}</td><td>${pkFmt(t.total)}</td><td>${t.metode_bayar}</td><td>${t.status_bayar}</td></tr>`).join('') || '<tr><td colspan="5">Tidak ada data</td></tr>'}
+    </table>
+  `;
+}
+
+/* ================= PENGATURAN TOKO ================= */
+function pkView_pengaturan(){
+  const s = DB.pengaturan;
+  document.getElementById('pkMain').innerHTML = `
+    <h2>Pengaturan Toko</h2>
+    <div class="pk-flex">
+      <div class="pk-field"><label>Nama Toko</label><input id="pkStNama" value="${s.nama_toko}"></div>
+      <div class="pk-field"><label>Alamat</label><input id="pkStAlamat" value="${s.alamat}"></div>
+      <div class="pk-field"><label>No Telp</label><input id="pkStTelp" value="${s.no_telp}"></div>
+    </div>
+    <div class="pk-flex">
+      <div class="pk-field"><label>Email</label><input id="pkStEmail" value="${s.email}"></div>
+      <div class="pk-field"><label>NPWP</label><input id="pkStNpwp" value="${s.npwp}"></div>
+      <div class="pk-field"><label>Pajak (%)</label><input type="number" id="pkStPajak" value="${s.pajak_persen}"></div>
+    </div>
+    <div class="pk-field"><label>Footer Struk</label><textarea id="pkStFooter" rows="2">${s.footer_struk}</textarea></div>
+    <button class="pk-btn" onclick="pkSavePengaturan()">Simpan Pengaturan</button>
+  `;
+}
+function pkSavePengaturan(){
+  DB.pengaturan.nama_toko = document.getElementById('pkStNama').value;
+  DB.pengaturan.alamat = document.getElementById('pkStAlamat').value;
+  DB.pengaturan.no_telp = document.getElementById('pkStTelp').value;
+  DB.pengaturan.email = document.getElementById('pkStEmail').value;
+  DB.pengaturan.npwp = document.getElementById('pkStNpwp').value;
+  DB.pengaturan.pajak_persen = Number(document.getElementById('pkStPajak').value||0);
+  DB.pengaturan.footer_struk = document.getElementById('pkStFooter').value;
+  pkSave();
+  document.getElementById('pkStoreName').innerText = DB.pengaturan.nama_toko;
+  alert('Pengaturan toko disimpan');
+}
+
+/* ================= BACKUP / RESTORE ================= */
+function pkView_backup(){
+  document.getElementById('pkMain').innerHTML = `
+    <h2>Backup / Restore Data</h2>
+    <p>Gunakan fitur ini <b>sebelum pindah perangkat/browser</b>, karena data hanya tersimpan lokal di perangkat ini.</p>
+    <button class="pk-btn" onclick="pkExportData()">Download Backup (JSON)</button>
+    <hr style="margin:20px 0;">
+    <h3>Restore dari File Backup</h3>
+    <p style="color:#b3261e;">Perhatian: proses ini akan menimpa seluruh data yang ada saat ini.</p>
+    <input type="file" id="pkImportFile" accept=".json">
+    <button class="pk-btn pk-btn-danger" onclick="pkImportData()">Restore Data</button>
+  `;
+}
+function pkExportData(){
+  const blob = new Blob([JSON.stringify(DB, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+  a.href = url;
+  a.download = `backup-kasir-${stamp}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+function pkImportData(){
+  const fileInput = document.getElementById('pkImportFile');
+  const file = fileInput.files[0];
+  if(!file){ alert('Pilih file backup terlebih dahulu'); return; }
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const parsed = JSON.parse(e.target.result);
+      if(!parsed.produk || !parsed.pengaturan){ throw new Error('Format file tidak sesuai'); }
+      DB = parsed;
+      pkSave();
+      alert('Restore berhasil!');
+      pkBoot();
+    }catch(err){
+      alert('Gagal restore: file tidak valid. ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+/* ---------- START ---------- */
+pkBoot();
+//]]></script>
+<b:section class='main' id='main' maxwidgets='1' showaddelement='no'/>
+</body>
+</html>
