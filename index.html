@@ -5,6 +5,7 @@
 <meta content='width=device-width, initial-scale=1.0' name='viewport'/>
 <title>POS KASIR</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9B%92%3C/text%3E%3C/svg%3E">
+<script src="https://unpkg.com/lucide@latest"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
@@ -501,7 +502,9 @@
       <div class='pk-main-wrap'>
         <div class='pk-topbar'>
           <div style='display:flex;align-items:center;gap:16px;'>
-            <button id='pkBtnBack' class='pk-btn pk-btn-sec pk-btn-sm pk-hidden' onclick='pkNav("home")'>&#8592; Menu</button>
+            <button id='pkBtnBack' class='pk-btn pk-btn-sec pk-btn-sm pk-hidden' onclick='pkNav("home")' style='display:inline-flex;align-items:center;gap:6px;'>
+              <i data-lucide="arrow-left" style="width:14px;height:14px;stroke-width:2.5;"></i> Menu
+            </button>
             <div id='pkStoreName' style='font-weight:bold;font-size:18px;color:#111827;'></div>
           </div>
           <div>
@@ -655,15 +658,31 @@ function pkNav(view){
   }
   const fn = 'pkView_' + view;
   if(typeof window[fn] === 'function') window[fn]();
+  if(typeof lucide !== 'undefined') lucide.createIcons();
 }
 function pkView_home(){
   const session = pkGetSession();
   const menus = PK_MENUS.filter(m=>m.roles.includes(session.role));
-  const icons = {dashboard:'📊', transaksi:'🛒', produk:'📦', pelanggan:'👥', pembelian:'📥', supplier:'🏢', hutangpiutang:'💸', loyalty:'🎁', karyawan:'👔', laporan:'📈', pengaturan:'⚙️', backup:'💾'};
+  const icons = {
+    dashboard: 'layout-dashboard',
+    transaksi: 'shopping-cart',
+    produk: 'package',
+    pelanggan: 'users',
+    pembelian: 'shopping-bag',
+    supplier: 'truck',
+    hutangpiutang: 'coins',
+    loyalty: 'gift',
+    karyawan: 'user-check',
+    laporan: 'trending-up',
+    pengaturan: 'settings',
+    backup: 'database'
+  };
   let html = '<h2>Menu Utama</h2><div class="pk-grid-menu">';
   menus.forEach(m=>{
     html += `<div class="pk-menu-box" onclick="pkNav('${m.key}')">
-      <div class="pk-menu-icon">${icons[m.key]||'📌'}</div>
+      <div class="pk-menu-icon" style="display:flex;align-items:center;justify-content:center;height:48px;margin-bottom:12px;color:var(--primary);">
+        <i data-lucide="${icons[m.key]||'pin'}" style="width:36px;height:36px;stroke-width:1.5;"></i>
+      </div>
       <div class="pk-menu-title">${m.label}</div>
     </div>`;
   });
