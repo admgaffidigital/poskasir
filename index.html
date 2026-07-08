@@ -1908,6 +1908,108 @@ function pkCetakStruk(trId){
   if(typeof lucide !== 'undefined') lucide.createIcons();
 }
 
+function pkCetakPembelian(pbId){
+  const pb = DB.pembelian.find(x=>x.id===pbId);
+  if(!pb) return;
+  const items = DB.pembelianDetail.filter(d=>d.pembelian_id===pbId);
+  const s = DB.pengaturan;
+  const sup = DB.supplier.find(x=>x.id===pb.supplier_id);
+  
+  let html = `
+  <div style="text-align:center;font-size:12px;line-height:1.4;margin-bottom:8px;">
+    <div style="font-weight:700;font-size:14px;text-transform:uppercase;">${s.nama_toko}</div>
+    <div style="font-size:11px;font-weight:600;margin-top:4px;color:#1e293b;">NOTA PEMBELIAN (RESTOK)</div>
+    <div style="color:#475569;font-size:10px;margin-top:2px;">Supplier: ${sup?sup.nama:'-'}</div>
+  </div>
+  <div style="border-top:1px dashed #000;margin:6px 0;"></div>
+  
+  <table style="width:100%;font-size:11px;border-collapse:collapse;line-height:1.4;margin-bottom:6px;">
+    <tr>
+      <td style="color:#475569;">No. Nota</td>
+      <td style="text-align:right;font-weight:600;">${pb.no}</td>
+    </tr>
+    <tr>
+      <td style="color:#475569;">Tanggal</td>
+      <td style="text-align:right;">${pb.tanggal.slice(0,16).replace('T',' ')}</td>
+    </tr>
+    <tr>
+      <td style="color:#475569;">Status Bayar</td>
+      <td style="text-align:right;text-transform:uppercase;font-weight:600;">${pb.status_bayar}</td>
+    </tr>
+    ${pb.jatuh_tempo ? `
+    <tr>
+      <td style="color:#475569;">Jatuh Tempo</td>
+      <td style="text-align:right;color:#dc2626;font-weight:600;">${pb.jatuh_tempo}</td>
+    </tr>
+    ` : ''}
+  </table>
+  <div style="border-top:1px dashed #000;margin:6px 0;"></div>
+
+  <!-- Daftar Items -->
+  <div style="font-size:11px;margin-bottom:6px;">
+    ${items.map(i => {
+      const p = DB.produk.find(x=>x.id===i.produk_id);
+      const name = p ? p.nama : '-';
+      return `
+        <div style="margin-bottom:6px;">
+          <div style="font-weight:600;word-break:break-word;">${name} ${i.varian?`<small>(${i.varian})</small>`:''}</div>
+          <div style="display:flex;justify-content:space-between;color:#334155;font-size:10.5px;margin-top:1px;">
+            <span>${i.qty} x ${pkFmt(i.harga)}</span>
+            <span style="font-weight:600;color:#000;">${pkFmt(i.subtotal)}</span>
+          </div>
+        </div>
+      `;
+    }).join('')}
+  </div>
+  <div style="border-top:1px dashed #000;margin:6px 0;"></div>
+
+  <!-- Total -->
+  <table style="width:100%;font-size:11px;border-collapse:collapse;line-height:1.4;">
+    <tr style="font-weight:700;font-size:12px;">
+      <td>Total Pembelian</td>
+      <td style="text-align:right;">${pkFmt(pb.total)}</td>
+    </tr>
+  </table>
+  
+  <div style="border-top:1px dashed #000;margin:6px 0;"></div>
+  <div style="text-align:center;font-size:10px;color:#475569;margin-top:6px;">
+    Barang telah diterima dan stok telah diperbarui.
+  </div>
+  `;
+  
+  // Set hidden printable element
+  const r = document.getElementById('pk-receipt');
+  r.innerHTML = html;
+
+  // Render popup receipt modal preview
+  let modal = document.getElementById('pkReceiptModal');
+  if(!modal){
+    modal = document.createElement('div');
+    modal.id = 'pkReceiptModal';
+    modal.style = "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.6);backdrop-filter:blur(6px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;";
+    document.body.appendChild(modal);
+  }
+  modal.innerHTML = `
+    <div style="background:#ffffff;border-radius:16px;box-shadow:var(--shadow-xl);width:100%;max-width:340px;display:flex;flex-direction:column;max-height:90vh;overflow:hidden;border:1px solid var(--border);">
+      <div style="padding:16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:#f8fafc;">
+        <span style="font-weight:700;font-family:var(--font-title);color:var(--text-main);font-size:15px;display:flex;align-items:center;gap:6px;"><i data-lucide="receipt" style="width:18px;height:18px;color:var(--primary);"></i> Nota Pembelian</span>
+        <button onclick="document.getElementById('pkReceiptModal').style.display='none'" style="border:none;background:transparent;cursor:pointer;color:var(--text-muted);display:flex;align-items:center;"><i data-lucide="x" style="width:20px;height:20px;"></i></button>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:20px;background:#f1f5f9;display:flex;justify-content:center;">
+        <div style="background:#ffffff;box-shadow:var(--shadow-sm);border:1px solid var(--border);padding:20px;width:280px;height:fit-content;font-family:monospace;font-size:12px;color:#000;line-height:1.5;text-align:left;">
+          ${html}
+        </div>
+      </div>
+      <div style="padding:16px;border-top:1px solid var(--border);display:flex;gap:12px;background:#f8fafc;">
+        <button class="pk-btn pk-btn-sec" onclick="document.getElementById('pkReceiptModal').style.display='none'" style="flex:1;">Tutup</button>
+        <button class="pk-btn" onclick="window.print()" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;"><i data-lucide="printer" style="width:14px;height:14px;"></i> Cetak</button>
+      </div>
+    </div>
+  `;
+  modal.style.display = 'flex';
+  if(typeof lucide !== 'undefined') lucide.createIcons();
+}
+
 /* ================= PELANGGAN ================= */
 let pkEditPelangganId = null;
 function pkView_pelanggan(){
@@ -2111,13 +2213,24 @@ function pkRenderPembelian(){
     <p><b>Total: ${pkFmt(pkPembelianCart.reduce((a,i)=>a+i.qty*i.harga,0))}</b></p>
     <button class="pk-btn" onclick="pkSimpanPembelian()">Simpan & Terima Barang (Update Stok)</button>
     <h3 style="margin-top:24px;">Riwayat Pembelian</h3>
-    <table class="pk-table"><tr><th>No</th><th>Supplier</th><th>Total</th><th>Status Bayar</th></tr>
+    <table class="pk-table"><tr><th>No</th><th>Supplier</th><th>Total</th><th>Status Bayar</th><th>Cetak</th></tr>
       ${DB.pembelian.map(p=>{
         const s = DB.supplier.find(x=>x.id===p.supplier_id);
-        return `<tr><td data-label="No">${p.no}</td><td data-label="Supplier">${s?s.nama:'-'}</td><td data-label="Total">${pkFmt(p.total)}</td><td data-label="Status Bayar">${p.status_bayar}</td></tr>`;
+        return `<tr>
+          <td data-label="No">${p.no}</td>
+          <td data-label="Supplier">${s?s.nama:'-'}</td>
+          <td data-label="Total">${pkFmt(p.total)}</td>
+          <td data-label="Status Bayar">${p.status_bayar}</td>
+          <td data-label="Cetak">
+            <button class="pk-btn pk-btn-sec pk-btn-sm" style="display:inline-flex;align-items:center;gap:4px;" onclick="pkCetakPembelian(${p.id})">
+              <i data-lucide="printer" style="width:12px;height:12px;"></i> Struk
+            </button>
+          </td>
+        </tr>`;
       }).join('')}
     </table>
   `;
+  if(typeof lucide !== 'undefined') lucide.createIcons();
 }
 function pkPbCheckVarian(){
   const pid = Number(document.getElementById('pkPbProduk').value);
@@ -2213,7 +2326,7 @@ function pkView_hutangpiutang(){
 }
 function pkRenderHutang(){
   document.getElementById('pkHpBody').innerHTML = `
-    <table class="pk-table"><tr><th>Supplier</th><th>Jumlah</th><th>Sisa</th><th>Jatuh Tempo</th><th>Status</th><th>Bayar</th></tr>
+    <table class="pk-table"><tr><th>Supplier</th><th>Jumlah</th><th>Sisa</th><th>Jatuh Tempo</th><th>Status</th><th>Cetak</th><th>Bayar</th></tr>
     ${DB.hutang.map(h=>{
       const s = DB.supplier.find(x=>x.id===h.supplier_id);
       return `<tr>
@@ -2222,12 +2335,18 @@ function pkRenderHutang(){
         <td data-label="Sisa">${pkFmt(h.sisa)}</td>
         <td data-label="Jatuh Tempo">${h.jatuh_tempo||'-'}</td>
         <td data-label="Status"><span class="pk-badge ${h.status==='lunas'?'pk-badge-green':'pk-badge-red'}">${h.status}</span></td>
+        <td data-label="Cetak">
+          <button class="pk-btn pk-btn-sec pk-btn-sm" style="display:inline-flex;align-items:center;gap:4px;" onclick="pkCetakPembelian(${h.pembelian_id})">
+            <i data-lucide="printer" style="width:12px;height:12px;"></i> Struk
+          </button>
+        </td>
         <td data-label="Bayar">${h.status!=='lunas'?`<input type="number" placeholder="Jumlah" id="pkBayarH${h.id}" style="width:90px;margin-right:8px;">
         <button class="pk-btn pk-btn-sm" onclick="pkBayarHutang(${h.id})">Bayar</button>`:'-'}</td>
       </tr>`;
-    }).join('') || '<tr><td colspan="6">Belum ada hutang</td></tr>'}
+    }).join('') || '<tr><td colspan="7">Belum ada hutang</td></tr>'}
     </table>
   `;
+  if(typeof lucide !== 'undefined') lucide.createIcons();
 }
 function pkBayarHutang(hutangId){
   const h = DB.hutang.find(x=>x.id===hutangId);
@@ -2240,7 +2359,7 @@ function pkBayarHutang(hutangId){
 }
 function pkRenderPiutang(){
   document.getElementById('pkHpBody').innerHTML = `
-    <table class="pk-table"><tr><th>Pelanggan</th><th>Jumlah</th><th>Sisa</th><th>Status</th><th>Bayar</th></tr>
+    <table class="pk-table"><tr><th>Pelanggan</th><th>Jumlah</th><th>Sisa</th><th>Status</th><th>Cetak</th><th>Bayar</th></tr>
     ${DB.piutang.map(p=>{
       const c = DB.pelanggan.find(x=>x.id===p.pelanggan_id);
       return `<tr>
@@ -2248,12 +2367,18 @@ function pkRenderPiutang(){
         <td data-label="Jumlah">${pkFmt(p.jumlah)}</td>
         <td data-label="Sisa">${pkFmt(p.sisa)}</td>
         <td data-label="Status"><span class="pk-badge ${p.status==='lunas'?'pk-badge-green':'pk-badge-red'}">${p.status}</span></td>
+        <td data-label="Cetak">
+          <button class="pk-btn pk-btn-sec pk-btn-sm" style="display:inline-flex;align-items:center;gap:4px;" onclick="pkCetakStruk(${p.transaksi_id})">
+            <i data-lucide="printer" style="width:12px;height:12px;"></i> Struk
+          </button>
+        </td>
         <td data-label="Bayar">${p.status!=='lunas'?`<input type="number" placeholder="Jumlah" id="pkBayarP${p.id}" style="width:90px;margin-right:8px;">
         <button class="pk-btn pk-btn-sm" onclick="pkBayarPiutang(${p.id})">Bayar</button>`:'-'}</td>
       </tr>`;
-    }).join('') || '<tr><td colspan="5">Belum ada piutang</td></tr>'}
+    }).join('') || '<tr><td colspan="6">Belum ada piutang</td></tr>'}
     </table>
   `;
+  if(typeof lucide !== 'undefined') lucide.createIcons();
 }
 function pkBayarPiutang(piutangId){
   const p = DB.piutang.find(x=>x.id===piutangId);
@@ -2465,16 +2590,22 @@ function pkRunLaporan(){
     </div>
     <h3 style="margin-top:24px;">Rincian Transaksi</h3>
     <table class="pk-table">
-      <tr><th>No</th><th>Tanggal</th><th>Total</th><th>Metode</th><th>Status</th></tr>
+      <tr><th>No</th><th>Tanggal</th><th>Total</th><th>Metode</th><th>Status</th><th>Aksi</th></tr>
       ${list.map(t=>`<tr>
         <td data-label="No">${t.no}</td>
         <td data-label="Tanggal">${t.tanggal.slice(0,10)}</td>
         <td data-label="Total">${pkFmt(t.total)}</td>
         <td data-label="Metode">${t.metode_bayar}</td>
         <td data-label="Status">${t.status_bayar}</td>
-      </tr>`).join('') || '<tr><td colspan="5">Tidak ada data</td></tr>'}
+        <td data-label="Aksi">
+          <button class="pk-btn pk-btn-sm" style="display:inline-flex;align-items:center;gap:4px;" onclick="pkCetakStruk(${t.id})">
+            <i data-lucide="printer" style="width:12px;height:12px;"></i> Struk
+          </button>
+        </td>
+      </tr>`).join('') || '<tr><td colspan="6">Tidak ada data</td></tr>'}
     </table>
   `;
+  if(typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 /* ================= PENGATURAN TOKO ================= */
