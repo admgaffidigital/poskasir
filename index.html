@@ -457,6 +457,20 @@
   .pk-card .val { font-size: 26px; }
 }
 
+/* Dashboard Grid */
+.pk-grid-dashboard {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+@media (max-width: 768px) {
+  .pk-grid-dashboard {
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+  }
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: #f1f5f9; }
@@ -702,14 +716,14 @@ function pkView_dashboard(){
   const piutangJatuhTempo = DB.piutang.filter(p=>p.status!=='lunas' && p.jatuh_tempo && p.jatuh_tempo<=today);
   document.getElementById('pkMain').innerHTML = `
     <h2>Dashboard</h2>
-    <div class="pk-flex">
+    <div class="pk-grid-dashboard">
       <div class="pk-card"><h4>Omzet Hari Ini</h4><div class="val">${pkFmt(omzetToday)}</div></div>
       <div class="pk-card"><h4>Transaksi Hari Ini</h4><div class="val">${todayTrans.length}</div></div>
       <div class="pk-card"><h4>Stok Menipis</h4><div class="val">${stokMenipis.length}</div></div>
       <div class="pk-card"><h4>Hutang Jatuh Tempo</h4><div class="val">${hutangJatuhTempo.length}</div></div>
       <div class="pk-card"><h4>Piutang Jatuh Tempo</h4><div class="val">${piutangJatuhTempo.length}</div></div>
     </div>
-    ${stokMenipis.length ? `<h3 style="margin-top:20px;">Produk Stok Menipis</h3>
+    ${stokMenipis.length ? `<h3 style="margin-top:24px;">Produk Stok Menipis</h3>
     <table class="pk-table"><tr><th>Kode</th><th>Nama</th><th>Stok</th><th>Min</th></tr>
     ${stokMenipis.map(p=>`<tr><td>${p.kode}</td><td>${p.nama}</td><td>${p.stok}</td><td>${p.stok_min}</td></tr>`).join('')}
     </table>` : ''}
@@ -1485,13 +1499,16 @@ function pkView_loyalty(){
   const s = DB.pengaturan;
   document.getElementById('pkMain').innerHTML = `
     <h2>Loyalty Poin Pelanggan</h2>
-    <div class="pk-flex">
-      <div class="pk-field"><label>Nominal belanja per 1 poin (Rp)</label><input type="number" id="pkLoyPerRp" value="${s.poin_per_rupiah}"></div>
-      <div class="pk-field"><label>Nilai 1 poin (Rp)</label><input type="number" id="pkLoyRpPerPoin" value="${s.rupiah_per_poin}"></div>
-      <div class="pk-field"><label>Minimum poin untuk ditukar</label><input type="number" id="pkLoyMin" value="${s.min_tukar_poin}"></div>
+    <div class="pk-card" style="margin-bottom:24px;">
+      <h3 style="margin-top:0;font-family:var(--font-title);">Konfigurasi Poin</h3>
+      <div class="pk-flex">
+        <div class="pk-field"><label>Nominal Belanja per 1 Poin (Rp)</label><input type="number" id="pkLoyPerRp" value="${s.poin_per_rupiah}"></div>
+        <div class="pk-field"><label>Nilai 1 Poin (Rp)</label><input type="number" id="pkLoyRpPerPoin" value="${s.rupiah_per_poin}"></div>
+        <div class="pk-field"><label>Minimum Poin untuk Ditukar</label><input type="number" id="pkLoyMin" value="${s.min_tukar_poin}"></div>
+      </div>
+      <button class="pk-btn" onclick="pkSaveLoyalty()">Simpan Pengaturan</button>
     </div>
-    <button class="pk-btn" onclick="pkSaveLoyalty()">Simpan Pengaturan</button>
-    <h3 style="margin-top:20px;">Riwayat Poin</h3>
+    <h3 style="margin-top:24px;">Riwayat Perolehan Poin</h3>
     <table class="pk-table"><tr><th>Pelanggan</th><th>Jenis</th><th>Jumlah</th><th>Tanggal</th><th>Keterangan</th></tr>
       ${DB.poinLog.slice().reverse().map(l=>{
         const c = DB.pelanggan.find(x=>x.id===l.pelanggan_id);
@@ -1509,44 +1526,76 @@ function pkSaveLoyalty(){
 }
 
 /* ================= KARYAWAN ================= */
+let pkEditKaryawanId = null;
 function pkView_karyawan(){
+  pkEditKaryawanId = null;
   document.getElementById('pkMain').innerHTML = `
-    <h2>Karyawan</h2>
+    <h2 id="pkKyTitle">Tambah Karyawan</h2>
     <div class="pk-flex">
       <div class="pk-field"><label>Nama</label><input id="pkKyNama"></div>
       <div class="pk-field"><label>Jabatan</label><input id="pkKyJabatan"></div>
       <div class="pk-field"><label>No HP</label><input id="pkKyHp"></div>
       <div class="pk-field"><label>Gaji Pokok</label><input type="number" id="pkKyGaji"></div>
     </div>
-    <button class="pk-btn" onclick="pkAddKaryawan()">Tambah Karyawan</button>
+    <div style="display:flex;gap:12px;margin-top:12px;">
+      <button class="pk-btn" id="pkKyBtnSimpan" onclick="pkAddKaryawan()">Simpan Karyawan</button>
+      <button class="pk-btn pk-btn-sec pk-hidden" id="pkKyBtnBatal" onclick="pkView_karyawan()">Batal</button>
+    </div>
+    <h3 style="margin-top:24px;">Daftar Karyawan</h3>
     <table class="pk-table" style="margin-top:16px;">
       <tr><th>Nama</th><th>Jabatan</th><th>No HP</th><th>Gaji Pokok</th><th>Status</th><th>Aksi</th></tr>
       ${DB.karyawan.map(k=>`<tr><td>${k.nama}</td><td>${k.jabatan}</td><td>${k.no_hp}</td><td>${pkFmt(k.gaji_pokok)}</td><td>${k.status}</td>
-        <td><button class="pk-btn pk-btn-danger pk-btn-sm" onclick="pkDelKaryawan(${k.id})">Hapus</button></td></tr>`).join('')}
+        <td>
+          <button class="pk-btn pk-btn-sm" style="background:#3b82f6;margin-right:4px;" onclick="pkLoadEditKaryawan(${k.id})">Edit</button>
+          <button class="pk-btn pk-btn-danger pk-btn-sm" onclick="pkDelKaryawan(${k.id})">Hapus</button>
+        </td></tr>`).join('')}
     </table>
   `;
 }
 function pkAddKaryawan(){
   const nama = document.getElementById('pkKyNama').value.trim();
   if(!nama) return;
-  DB.karyawan.push({id:pkNextId('karyawan'), user_id:null, nama, jabatan:document.getElementById('pkKyJabatan').value,
-    no_hp:document.getElementById('pkKyHp').value, alamat:'', tanggal_masuk:pkToday(),
-    gaji_pokok:Number(document.getElementById('pkKyGaji').value||0), status:'aktif'});
+  if(pkEditKaryawanId){
+    const k = DB.karyawan.find(x=>x.id===pkEditKaryawanId);
+    if(k){
+      k.nama = nama;
+      k.jabatan = document.getElementById('pkKyJabatan').value;
+      k.no_hp = document.getElementById('pkKyHp').value;
+      k.gaji_pokok = Number(document.getElementById('pkKyGaji').value||0);
+    }
+    pkEditKaryawanId = null;
+  } else {
+    DB.karyawan.push({id:pkNextId('karyawan'), user_id:null, nama, jabatan:document.getElementById('pkKyJabatan').value,
+      no_hp:document.getElementById('pkKyHp').value, alamat:'', tanggal_masuk:pkToday(),
+      gaji_pokok:Number(document.getElementById('pkKyGaji').value||0), status:'aktif'});
+  }
   pkSave(); pkView_karyawan();
 }
-function pkDelKaryawan(id){
-  DB.karyawan = DB.karyawan.filter(k=>k.id!==id);
-  pkSave(); pkView_karyawan();
+function pkLoadEditKaryawan(id){
+  const k = DB.karyawan.find(x=>x.id===id);
+  if(!k) return;
+  pkEditKaryawanId = id;
+  document.getElementById('pkKyNama').value = k.nama;
+  document.getElementById('pkKyJabatan').value = k.jabatan;
+  document.getElementById('pkKyHp').value = k.no_hp;
+  document.getElementById('pkKyGaji').value = k.gaji_pokok;
+  document.getElementById('pkKyTitle').innerText = 'Edit Karyawan';
+  document.getElementById('pkKyBtnSimpan').innerText = 'Simpan Perubahan';
+  document.getElementById('pkKyBtnBatal').classList.remove('pk-hidden');
+  window.scrollTo(0,0);
 }
 
 /* ================= LAPORAN ================= */
 function pkView_laporan(){
   document.getElementById('pkMain').innerHTML = `
-    <h2>Laporan</h2>
-    <div class="pk-flex">
-      <div class="pk-field"><label>Dari Tanggal</label><input type="date" id="pkLapDari"></div>
-      <div class="pk-field"><label>Sampai Tanggal</label><input type="date" id="pkLapSampai"></div>
-      <div style="align-self:flex-end;"><button class="pk-btn" onclick="pkRunLaporan()">Tampilkan</button></div>
+    <h2>Laporan Penjualan</h2>
+    <div class="pk-card" style="margin-bottom:24px;">
+      <h3 style="margin-top:0;font-family:var(--font-title);">Filter Periode</h3>
+      <div class="pk-flex" style="align-items:flex-end;">
+        <div class="pk-field" style="margin-bottom:0;"><label>Dari Tanggal</label><input type="date" id="pkLapDari"></div>
+        <div class="pk-field" style="margin-bottom:0;"><label>Sampai Tanggal</label><input type="date" id="pkLapSampai"></div>
+        <div style="flex:0 0 auto;"><button class="pk-btn" onclick="pkRunLaporan()">Tampilkan Laporan</button></div>
+      </div>
     </div>
     <div id="pkLapResult"></div>
   `;
@@ -1560,11 +1609,12 @@ function pkRunLaporan(){
   });
   const totalOmzet = list.reduce((a,t)=>a+t.total,0);
   document.getElementById('pkLapResult').innerHTML = `
-    <div class="pk-flex">
+    <div class="pk-grid-dashboard">
       <div class="pk-card"><h4>Total Transaksi</h4><div class="val">${list.length}</div></div>
       <div class="pk-card"><h4>Total Omzet</h4><div class="val">${pkFmt(totalOmzet)}</div></div>
     </div>
-    <table class="pk-table" style="margin-top:16px;">
+    <h3 style="margin-top:24px;">Rincian Transaksi</h3>
+    <table class="pk-table">
       <tr><th>No</th><th>Tanggal</th><th>Total</th><th>Metode</th><th>Status</th></tr>
       ${list.map(t=>`<tr><td>${t.no}</td><td>${t.tanggal.slice(0,10)}</td><td>${pkFmt(t.total)}</td><td>${t.metode_bayar}</td><td>${t.status_bayar}</td></tr>`).join('') || '<tr><td colspan="5">Tidak ada data</td></tr>'}
     </table>
@@ -1576,18 +1626,21 @@ function pkView_pengaturan(){
   const s = DB.pengaturan;
   document.getElementById('pkMain').innerHTML = `
     <h2>Pengaturan Toko</h2>
-    <div class="pk-flex">
-      <div class="pk-field"><label>Nama Toko</label><input id="pkStNama" value="${s.nama_toko}"></div>
-      <div class="pk-field"><label>Alamat</label><input id="pkStAlamat" value="${s.alamat}"></div>
-      <div class="pk-field"><label>No Telp</label><input id="pkStTelp" value="${s.no_telp}"></div>
+    <div class="pk-card">
+      <h3 style="margin-top:0;font-family:var(--font-title);">Identitas & Pajak Toko</h3>
+      <div class="pk-flex">
+        <div class="pk-field"><label>Nama Toko</label><input id="pkStNama" value="${s.nama_toko}"></div>
+        <div class="pk-field"><label>Alamat</label><input id="pkStAlamat" value="${s.alamat}"></div>
+        <div class="pk-field"><label>No Telp</label><input id="pkStTelp" value="${s.no_telp}"></div>
+      </div>
+      <div class="pk-flex">
+        <div class="pk-field"><label>Email</label><input id="pkStEmail" value="${s.email}"></div>
+        <div class="pk-field"><label>NPWP</label><input id="pkStNpwp" value="${s.npwp}"></div>
+        <div class="pk-field"><label>Pajak (%)</label><input type="number" id="pkStPajak" value="${s.pajak_persen}"></div>
+      </div>
+      <div class="pk-field"><label>Footer Struk</label><textarea id="pkStFooter" rows="2">${s.footer_struk}</textarea></div>
+      <button class="pk-btn" onclick="pkSavePengaturan()">Simpan Pengaturan</button>
     </div>
-    <div class="pk-flex">
-      <div class="pk-field"><label>Email</label><input id="pkStEmail" value="${s.email}"></div>
-      <div class="pk-field"><label>NPWP</label><input id="pkStNpwp" value="${s.npwp}"></div>
-      <div class="pk-field"><label>Pajak (%)</label><input type="number" id="pkStPajak" value="${s.pajak_persen}"></div>
-    </div>
-    <div class="pk-field"><label>Footer Struk</label><textarea id="pkStFooter" rows="2">${s.footer_struk}</textarea></div>
-    <button class="pk-btn" onclick="pkSavePengaturan()">Simpan Pengaturan</button>
   `;
 }
 function pkSavePengaturan(){
@@ -1607,13 +1660,22 @@ function pkSavePengaturan(){
 function pkView_backup(){
   document.getElementById('pkMain').innerHTML = `
     <h2>Backup / Restore Data</h2>
-    <p>Gunakan fitur ini <b>sebelum pindah perangkat/browser</b>, karena data hanya tersimpan lokal di perangkat ini.</p>
-    <button class="pk-btn" onclick="pkExportData()">Download Backup (JSON)</button>
-    <hr style="margin:20px 0;">
-    <h3>Restore dari File Backup</h3>
-    <p style="color:#b3261e;">Perhatian: proses ini akan menimpa seluruh data yang ada saat ini.</p>
-    <input type="file" id="pkImportFile" accept=".json">
-    <button class="pk-btn pk-btn-danger" onclick="pkImportData()">Restore Data</button>
+    <div class="pk-card" style="margin-bottom:24px;">
+      <p style="margin-top:0;color:var(--text-muted);">Gunakan fitur ini <b>sebelum pindah perangkat/browser</b>, karena data hanya tersimpan secara lokal di browser perangkat ini.</p>
+      <button class="pk-btn" onclick="pkExportData()" style="display:inline-flex;align-items:center;gap:8px;">
+        <i data-lucide="download" style="width:16px;height:16px;"></i> Download Backup (JSON)
+      </button>
+    </div>
+    <div class="pk-card" style="border-color:rgba(239, 68, 68, 0.25);">
+      <h3 style="margin-top:0;color:var(--danger);font-family:var(--font-title);font-weight:700;">Restore dari File Backup</h3>
+      <p style="color:var(--text-muted);margin-bottom:16px;">Perhatian: proses pemulihan ini akan menimpa seluruh data transaksi, produk, dan pelanggan saat ini.</p>
+      <div class="pk-field" style="max-width:320px;">
+        <input type="file" id="pkImportFile" accept=".json" style="padding:8px 12px;border:1px dashed var(--border);background:#f8fafc;">
+      </div>
+      <button class="pk-btn pk-btn-danger" onclick="pkImportData()" style="display:inline-flex;align-items:center;gap:8px;">
+        <i data-lucide="upload" style="width:16px;height:16px;"></i> Restore Data
+      </button>
+    </div>
   `;
 }
 function pkExportData(){
