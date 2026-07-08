@@ -953,27 +953,32 @@ function pkRenderTransaksi(){
     <div class="pk-flex">
       <div style="flex:2;">
         <input class="pk-search-box" id="pkTrSearch" placeholder="Cari produk (nama/kode)..." oninput="pkTrSearchProduk(this.value)">
-        <div id="pkTrProdukList" style="max-height:220px;overflow:auto;border:1px solid #eee;padding:6px;"></div>
+        <div id="pkTrProdukList" style="max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-md);padding:8px;background:#f8fafc;"></div>
       </div>
-      <div style="flex:1;min-width:260px;">
-        <label>Pelanggan</label>
-        <select id="pkTrPelanggan" style="width:100%;padding:6px;margin-bottom:10px;">${custOpts}</select>
-        <div id="pkCartBox"></div>
-        <div style="margin-top:10px;">
-          <label>Diskon (Rp)</label>
-          <input type="number" id="pkTrDiskon" value="0" oninput="pkRenderCart()" style="width:100%;padding:6px;">
+      <div style="flex:1;min-width:280px;background:#ffffff;border:1px solid var(--border);border-radius:var(--radius-md);padding:20px;box-shadow:var(--shadow-sm);">
+        <div class="pk-field">
+          <label>Pelanggan</label>
+          <select id="pkTrPelanggan">${custOpts}</select>
         </div>
-        <div style="margin-top:10px;">
+        <div id="pkCartBox" style="margin-bottom:16px;"></div>
+        <div class="pk-field">
+          <label>Diskon (Rp)</label>
+          <input type="number" id="pkTrDiskon" value="0" oninput="pkRenderCart()">
+        </div>
+        <div class="pk-field">
           <label>Metode Bayar</label>
-          <select id="pkTrMetode" style="width:100%;padding:6px;">
+          <select id="pkTrMetode">
             <option value="tunai">Tunai</option>
             <option value="transfer">Transfer</option>
             <option value="qris">QRIS</option>
             <option value="piutang">Piutang (belum lunas)</option>
           </select>
         </div>
-        <div style="margin-top:14px;font-size:16px;font-weight:bold;">Total: <span id="pkTrTotal">Rp 0</span></div>
-        <button class="pk-btn" style="width:100%;margin-top:10px;" onclick="pkCheckout()">Proses & Cetak Struk</button>
+        <div style="margin:20px 0 16px;padding-top:16px;border-top:1px solid var(--border);font-size:16px;font-weight:800;font-family:var(--font-title);color:var(--primary);display:flex;justify-content:space-between;">
+          <span>Total Bayar:</span>
+          <span id="pkTrTotal">Rp 0</span>
+        </div>
+        <button class="pk-btn" style="width:100%;" onclick="pkCheckout()">Proses & Cetak Struk</button>
       </div>
     </div>
   `;
@@ -985,13 +990,23 @@ function pkTrSearchProduk(q){
   const list = DB.produk.filter(p=>p.status!=='nonaktif' && (p.nama.toLowerCase().includes(q)||p.kode.toLowerCase().includes(q)));
   document.getElementById('pkTrProdukList').innerHTML = list.map(p=>{
     let st = p.has_varian ? (p.varian||[]).reduce((a,v)=>a+v.stok,0) : p.stok;
+    const isLow = st <= p.stok_min;
     return `
-    <div class="pk-cart-row">
-      <span>${p.nama} <small style="color:#888;">(stok:${st})</small></span>
-      <span>${pkFmt(p.harga_jual)}</span>
-      <button class="pk-btn pk-btn-sm" onclick="pkShowVarianModal(${p.id})">+ Tambah</button>
+    <div style="background:#ffffff;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;box-shadow:var(--shadow-sm);transition:all 0.2s;">
+      <div style="display:flex;flex-direction:column;gap:2px;">
+        <span style="font-weight:600;font-size:14px;color:var(--text-main);">${p.nama}</span>
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;">
+          <span style="color:var(--text-muted);font-weight:500;">Kode: ${p.kode}</span>
+          <span style="color:#cbd5e1;">|</span>
+          <span class="${isLow ? 'pk-badge pk-badge-red' : 'pk-badge pk-badge-green'}" style="padding:2px 6px;font-size:10px;text-transform:none;letter-spacing:0;">Stok: ${st}</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="font-weight:700;color:var(--primary);font-size:15px;font-family:var(--font-title);">${pkFmt(p.harga_jual)}</span>
+        <button class="pk-btn pk-btn-sm" style="padding:6px 12px;" onclick="pkShowVarianModal(${p.id})">+ Tambah</button>
+      </div>
     </div>
-  `}).join('') || '<p style="color:#888;">Produk tidak ditemukan</p>';
+  `}).join('') || '<div style="text-align:center;padding:16px;color:var(--text-muted);font-size:13px;font-weight:500;">Produk tidak ditemukan</div>';
 }
 function pkShowVarianModal(id){
   const p = DB.produk.find(x=>x.id===id);
@@ -1096,9 +1111,10 @@ function pkRenderCart(){
       </div>
       <div style="text-align:right;width:80px;font-weight:600;">${pkFmt(c.harga*c.qty)}</div>
     </div>
-  `).join('') : '<p style="color:#888;">Keranjang kosong</p>';
+  `).join('') : '<div style="text-align:center;padding:24px 12px;color:var(--text-muted);border:2px dashed var(--border);border-radius:var(--radius-md);margin-bottom:16px;font-size:13px;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:6px;"><i data-lucide="shopping-cart" style="width:28px;height:28px;color:#94a3b8;"></i><span>Keranjang belanja kosong</span></div>';
   const totalEl = document.getElementById('pkTrTotal');
   if(totalEl) totalEl.innerText = pkFmt(total);
+  if(typeof lucide !== 'undefined') lucide.createIcons();
 }
 function pkCheckout(){
   if(!pkCart.length){ alert('Keranjang masih kosong'); return; }
