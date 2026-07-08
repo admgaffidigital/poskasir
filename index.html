@@ -1472,6 +1472,18 @@ function pkTrSearchProduk(q){
     let st = p.has_varian ? (p.varian||[]).reduce((a,v)=>a+v.stok,0) : p.stok;
     const isLow = st <= p.stok_min;
     const katNama = DB.kategori.find(k=>k.id===p.kategori_id)?.nama || 'Umum';
+    
+    let pointBadge = '';
+    if(p.has_varian && p.varian){
+      const maxPts = Math.max(...p.varian.map(v=>v.poin||0));
+      const minPts = Math.min(...p.varian.map(v=>v.poin||0));
+      if(maxPts > 0){
+        pointBadge = `<span class="pk-badge" style="font-size:9px;padding:2px 5px;text-transform:none;letter-spacing:0;background:#eff6ff;color:#2563eb;border:1px solid #dbeafe;">+${minPts === maxPts ? maxPts : `${minPts}-${maxPts}`} Pts</span>`;
+      }
+    } else if(p.poin > 0) {
+      pointBadge = `<span class="pk-badge" style="font-size:9px;padding:2px 5px;text-transform:none;letter-spacing:0;background:#eff6ff;color:#2563eb;border:1px solid #dbeafe;">+${p.poin} Pts</span>`;
+    }
+
     return `
     <div onclick="pkShowVarianModal(${p.id})" class="pk-product-touch-card" style="background:#ffffff;border:1px solid var(--border);border-radius:var(--radius-md);padding:12px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:var(--shadow-sm);cursor:pointer;transition:all 0.2s;position:relative;height:120px;text-align:left;">
       <div>
@@ -1480,7 +1492,10 @@ function pkTrSearchProduk(q){
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
         <span style="font-weight:800;color:var(--primary);font-size:14px;font-family:var(--font-title);">${pkFmt(p.harga_jual)}</span>
-        <span class="${isLow ? 'pk-badge pk-badge-red' : 'pk-badge pk-badge-green'}" style="font-size:9px;padding:2px 5px;text-transform:none;letter-spacing:0;">Stok: ${st}</span>
+        <div style="display:flex;gap:4px;align-items:center;">
+          ${pointBadge}
+          <span class="${isLow ? 'pk-badge pk-badge-red' : 'pk-badge pk-badge-green'}" style="font-size:9px;padding:2px 5px;text-transform:none;letter-spacing:0;">Stok: ${st}</span>
+        </div>
       </div>
     </div>
     `;
@@ -1492,7 +1507,7 @@ function pkShowVarianModal(id){
   const p = DB.produk.find(x=>x.id===id);
   if(!p) return;
   if(p.has_varian && p.varian && p.varian.length > 0){
-    let opts = p.varian.map(v=>`<option value="${v.nama}">${v.nama} (Stok: ${v.stok})</option>`).join('');
+    let opts = p.varian.map(v=>`<option value="${v.nama}">${v.nama} (Stok: ${v.stok} | +${v.poin||0} Pts)</option>`).join('');
     let html = `
       <div id="pkModalVarian" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.6);backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;">
         <div style="background:#ffffff;padding:24px;border-radius:16px;width:100%;max-width:320px;box-shadow:var(--shadow-xl);border:1px solid var(--border);">
