@@ -391,7 +391,7 @@
   position: relative;
   overflow: hidden;
 }
-.pk-card::after {
+.pk-stat-card::after {
   content: '';
   position: absolute;
   left: 0;
@@ -1168,7 +1168,7 @@ function pkFilterProduk(q){
         <td data-label="Stok">${st} ${isLow?'<span class="pk-badge pk-badge-red">Menipis</span>':''}</td>
         <td data-label="Poin">${pointsLabel}</td>
         <td data-label="">
-          <button class="pk-btn pk-btn-sm" style="background:#3b82f6;margin-right:4px;" onclick="pkLoadEditProduk(${p.id})">Edit</button>
+          <button class="pk-btn pk-btn-sm pk-btn-blue" style="margin-right:4px;" onclick="pkLoadEditProduk(${p.id})">Edit</button>
           <button class="pk-btn pk-btn-danger pk-btn-sm" onclick="pkDelProduk(${p.id})">Hapus</button>
         </td>
       </tr>`;
@@ -1238,8 +1238,8 @@ function pkLoadEditProduk(id){
   document.getElementById('pkPrSatuan').value = p.satuan;
   document.getElementById('pkPrHargaBeli').value = p.harga_beli;
   document.getElementById('pkPrHargaJual').value = p.harga_jual;
-  document.getElementById('pkPrHargaGrosir').value = p.harga_grosir;
-  document.getElementById('pkPrMinGrosir').value = p.min_grosir;
+  document.getElementById('pkPrHargaGrosir').value = p.harga_grosir || 0;
+  document.getElementById('pkPrMinGrosir').value = p.min_grosir || 0;
   document.getElementById('pkPrStok').value = p.stok;
   document.getElementById('pkPrStokMin').value = p.stok_min;
   document.getElementById('pkPrPoin').value = p.poin || 0;
@@ -2165,6 +2165,7 @@ function pkView_pelanggan(){
       <div class="pk-flex">
         <div class="pk-field"><label>Nama</label><input id="pkPlNama"></div>
         <div class="pk-field"><label>No HP</label><input id="pkPlHp"></div>
+        <div class="pk-field"><label>Alamat</label><input id="pkPlAlamat"></div>
         <div class="pk-field"><label>Tipe</label>
           <select id="pkPlTipe"><option value="umum">Umum</option><option value="member">Member</option></select>
         </div>
@@ -2183,7 +2184,7 @@ function pkView_pelanggan(){
         <td data-label="Tipe">${c.tipe}</td>
         <td data-label="Poin">${c.poin}</td>
         <td data-label="">
-          <button class="pk-btn pk-btn-sm" style="background:#3b82f6;margin-right:4px;" onclick="pkLoadEditPelanggan(${c.id})">Edit</button>
+          <button class="pk-btn pk-btn-sm pk-btn-blue" style="margin-right:4px;" onclick="pkLoadEditPelanggan(${c.id})">Edit</button>
           <button class="pk-btn pk-btn-danger pk-btn-sm" onclick="pkDelPelanggan(${c.id})">Hapus</button>
         </td>
       </tr>`).join('')}
@@ -2198,12 +2199,13 @@ function pkAddPelanggan(){
     if(c){
       c.nama = nama;
       c.no_hp = document.getElementById('pkPlHp').value;
+      c.alamat = document.getElementById('pkPlAlamat').value;
       c.tipe = document.getElementById('pkPlTipe').value;
     }
     pkEditPelangganId = null;
   } else {
     DB.pelanggan.push({id:pkNextId('pelanggan'), nama, no_hp:document.getElementById('pkPlHp').value,
-      alamat:'', tipe:document.getElementById('pkPlTipe').value, poin:0});
+      alamat:document.getElementById('pkPlAlamat').value, tipe:document.getElementById('pkPlTipe').value, poin:0});
   }
   pkSave(); pkView_pelanggan();
 }
@@ -2213,6 +2215,7 @@ function pkLoadEditPelanggan(id){
   pkEditPelangganId = id;
   document.getElementById('pkPlNama').value = c.nama;
   document.getElementById('pkPlHp').value = c.no_hp;
+  document.getElementById('pkPlAlamat').value = c.alamat || '';
   document.getElementById('pkPlTipe').value = c.tipe;
   document.getElementById('pkPlTitle').innerText = 'Edit Pelanggan';
   document.getElementById('pkPlBtnSimpan').innerText = 'Simpan Perubahan';
@@ -2252,7 +2255,7 @@ function pkView_supplier(){
         <td data-label="Kontak">${s.kontak}</td>
         <td data-label="No HP">${s.no_hp}</td>
         <td data-label="">
-          <button class="pk-btn pk-btn-sm" style="background:#3b82f6;margin-right:4px;" onclick="pkLoadEditSupplier(${s.id})">Edit</button>
+          <button class="pk-btn pk-btn-sm pk-btn-blue" style="margin-right:4px;" onclick="pkLoadEditSupplier(${s.id})">Edit</button>
           <button class="pk-btn pk-btn-danger pk-btn-sm" onclick="pkDelSupplier(${s.id})">Hapus</button>
         </td>
       </tr>`).join('')}
@@ -2584,7 +2587,7 @@ function pkView_loyalty(){
           <td data-label="Nama Hadiah">${h.nama}</td>
           <td data-label="Kebutuhan Poin">${h.poin_required} Poin</td>
           <td data-label="">
-            <button class="pk-btn pk-btn-sm" style="background:#3b82f6;margin-right:4px;" onclick="pkLoadEditHadiah(${h.id})">Edit</button>
+            <button class="pk-btn pk-btn-sm pk-btn-blue" style="margin-right:4px;" onclick="pkLoadEditHadiah(${h.id})">Edit</button>
             <button class="pk-btn pk-btn-danger pk-btn-sm" onclick="pkDelHadiah(${h.id})">Hapus</button>
           </td>
         </tr>
@@ -2686,7 +2689,7 @@ function pkView_karyawan(){
         <td data-label="Gaji Pokok">${pkFmt(k.gaji_pokok)}</td>
         <td data-label="Status">${k.status}</td>
         <td data-label="">
-          <button class="pk-btn pk-btn-sm" style="background:#3b82f6;margin-right:4px;" onclick="pkLoadEditKaryawan(${k.id})">Edit</button>
+          <button class="pk-btn pk-btn-sm pk-btn-blue" style="margin-right:4px;" onclick="pkLoadEditKaryawan(${k.id})">Edit</button>
           <button class="pk-btn pk-btn-danger pk-btn-sm" onclick="pkDelKaryawan(${k.id})">Hapus</button>
         </td>
       </tr>`).join('')}
@@ -2837,7 +2840,7 @@ function pkView_pengaturan(){
   document.getElementById('pkMain').innerHTML = `
     <h2>Pengaturan Toko</h2>
     <div class="pk-card" style="margin-bottom:20px;">
-      <h3 style="margin-top:0;font-family:var(--font-title);">Identitas &amp; Pajak Toko</h3>
+      <h3 style="margin-top:0;font-family:var(--font-title);">Identitas & Pajak Toko</h3>
       <div class="pk-flex">
         <div class="pk-field"><label>Nama Toko</label><input id="pkStNama" value="${s.nama_toko}"></div>
         <div class="pk-field"><label>Alamat</label><input id="pkStAlamat" value="${s.alamat}"></div>
