@@ -669,7 +669,7 @@ function pkLoad(){
     const raw = localStorage.getItem(PK_KEY);
     if(raw){
       DB = JSON.parse(raw);
-      const defaultKeys = ['users', 'karyawan', 'kategori', 'produk', 'pelanggan', 'supplier', 'transaksi', 'transaksiDetail', 'pembelian', 'pembelianDetail', 'hutang', 'piutang', 'bayarHutang', 'bayarPiutang', 'poinLog', 'stokLog', 'pengaturan'];
+      const defaultKeys = ['users', 'karyawan', 'kategori', 'produk', 'pelanggan', 'supplier', 'transaksi', 'transaksiDetail', 'pembelian', 'pembelianDetail', 'hutang', 'piutang', 'bayarHutang', 'bayarPiutang', 'poinLog', 'stokLog', 'pengaturan', 'hadiah'];
       defaultKeys.forEach(k => {
         if(!DB[k]) DB[k] = (k === 'pengaturan') ? {} : [];
       });
@@ -988,6 +988,7 @@ function pkRenderProdukList(){
       <div id="pkPrStokBox" class="pk-flex">
         <div class="pk-field"><label>Stok Awal</label><input type="number" step="0.01" id="pkPrStok" value="0"></div>
         <div class="pk-field"><label>Stok Minimum</label><input type="number" step="0.01" id="pkPrStokMin" value="5"></div>
+        <div class="pk-field"><label>Poin Loyalty Produk</label><input type="number" id="pkPrPoin" value="0"></div>
       </div>
       <div id="pkPrVarianBox" class="pk-hidden" style="background:#f9fafb;padding:12px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:16px;">
         <p style="margin:0 0 8px;font-weight:600;">Daftar Varian</p>
@@ -1022,8 +1023,9 @@ function pkAddVarianRow(){
   row.innerHTML = `
     <input class="pkVarianNama" placeholder="Varian" style="flex:2;">
     <input type="number" step="0.01" class="pkVarianStok" placeholder="Stok" style="flex:1;">
-    <input type="number" class="pkVarianHargaBeli" placeholder="Modal (opsional)" style="flex:1.5;">
-    <input type="number" class="pkVarianHargaJual" placeholder="Jual (opsional)" style="flex:1.5;">
+    <input type="number" class="pkVarianHargaBeli" placeholder="Modal" style="flex:1.5;">
+    <input type="number" class="pkVarianHargaJual" placeholder="Jual" style="flex:1.5;">
+    <input type="number" class="pkVarianPoin" placeholder="Poin" style="flex:1;">
     <button class="pk-btn pk-btn-danger pk-btn-sm" style="padding:6px 10px;" onclick="this.parentNode.remove()">X</button>
   `;
   document.getElementById('pkVarianList').appendChild(row);
@@ -1032,13 +1034,16 @@ function pkFilterProduk(q){
   q = q.toLowerCase();
   const list = DB.produk.filter(p=>p.nama.toLowerCase().includes(q) || p.kode.toLowerCase().includes(q));
   document.getElementById('pkProdukTable').innerHTML = `
-    <tr><th>Kode</th><th>Nama</th><th>Kategori</th><th>Satuan</th><th>Harga Jual</th><th>Stok</th><th>Aksi</th></tr>
+    <tr><th>Kode</th><th>Nama</th><th>Kategori</th><th>Satuan</th><th>Harga Jual</th><th>Stok</th><th>Poin</th><th>Aksi</th></tr>
     ${list.map(p=>{
       const kat = DB.kategori.find(k=>k.id===p.kategori_id);
       let st = p.stok; let isLow = p.stok<=p.stok_min;
+      let pointsLabel = p.poin || 0;
       if(p.has_varian && p.varian){
         st = p.varian.reduce((a,v)=>a+v.stok,0);
         isLow = p.varian.some(v=>v.stok<=p.stok_min);
+        const pts = p.varian.map(v => `${v.nama}: ${v.poin||0}`).join(', ');
+        pointsLabel = `<small style="color:var(--text-muted);">${pts}</small>`;
       }
       const grosirLabel = p.min_grosir > 0 ? `<br><small style="color:#059669;">Grosir: ${pkFmt(p.harga_grosir)} (&#8805;${p.min_grosir})</small>` : '';
       return `<tr>
@@ -1047,7 +1052,8 @@ function pkFilterProduk(q){
         <td data-label="Kategori">${kat?kat.nama:'-'}</td>
         <td data-label="Satuan">${p.satuan}</td>
         <td data-label="Harga Jual">${pkFmt(p.harga_jual)}</td>
-        <td data-label="Stok">${st} ${isLow?'<span class=\"pk-badge pk-badge-red\">Menipis</span>':''}</td>
+        <td data-label="Stok">${st} ${isLow?'<span class="pk-badge pk-badge-red">Menipis</span>':''}</td>
+        <td data-label="Poin">${pointsLabel}</td>
         <td data-label="">
           <button class="pk-btn pk-btn-sm" style="background:#3b82f6;margin-right:4px;" onclick="pkLoadEditProduk(${p.id})">Edit</button>
           <button class="pk-btn pk-btn-danger pk-btn-sm" onclick="pkDelProduk(${p.id})">Hapus</button>
@@ -1069,10 +1075,13 @@ function pkAddProduk(){
       const vs = Number(row.querySelector('.pkVarianStok').value||0);
       const vhb = Number(row.querySelector('.pkVarianHargaBeli').value||0);
       const vhj = Number(row.querySelector('.pkVarianHargaJual').value||0);
-      if(vn) varian.push({nama:vn, stok:vs, harga_beli:vhb, harga_jual:vhj});
+      const vp = Number(row.querySelector('.pkVarianPoin').value||0);
+      if(vn) varian.push({nama:vn, stok:vs, harga_beli:vhb, harga_jual:vhj, poin:vp});
     });
     if(!varian.length){ alert('Minimal isi 1 varian'); return; }
   }
+  
+  const poin = Number(document.getElementById('pkPrPoin')?.value||0);
   
   if(pkEditProdukId){
     const p = DB.produk.find(x=>x.id===pkEditProdukId);
@@ -1087,6 +1096,7 @@ function pkAddProduk(){
       p.stok = Number(document.getElementById('pkPrStok').value||0);
       p.stok_min = Number(document.getElementById('pkPrStokMin').value||0);
       p.has_varian = has_varian; p.varian = varian;
+      p.poin = poin;
     }
   } else {
     DB.produk.push({
@@ -1099,7 +1109,8 @@ function pkAddProduk(){
       min_grosir: Number(document.getElementById('pkPrMinGrosir').value||0),
       stok: Number(document.getElementById('pkPrStok').value||0),
       stok_min: Number(document.getElementById('pkPrStokMin').value||0),
-      status:'aktif', has_varian, varian
+      status:'aktif', has_varian, varian,
+      poin: poin
     });
   }
   pkSave(); pkRenderProdukList();
@@ -1118,6 +1129,7 @@ function pkLoadEditProduk(id){
   document.getElementById('pkPrMinGrosir').value = p.min_grosir;
   document.getElementById('pkPrStok').value = p.stok;
   document.getElementById('pkPrStokMin').value = p.stok_min;
+  document.getElementById('pkPrPoin').value = p.poin || 0;
   
   document.getElementById('pkPrHasVarian').checked = p.has_varian;
   pkToggleVarian(p.has_varian);
@@ -1133,6 +1145,7 @@ function pkLoadEditProduk(id){
       last.querySelector('.pkVarianStok').value = v.stok;
       last.querySelector('.pkVarianHargaBeli').value = v.harga_beli || 0;
       last.querySelector('.pkVarianHargaJual').value = v.harga_jual || 0;
+      last.querySelector('.pkVarianPoin').value = v.poin || 0;
     });
   }
   
@@ -1341,8 +1354,18 @@ function pkRenderTransaksi(){
       <div class="pk-card" style="margin-bottom:20px;">
         <div class="pk-field">
           <label>Pelanggan</label>
-          <select id="pkTrPelanggan">${custOpts}</select>
+          <select id="pkTrPelanggan" onchange="pkTrUpdateGiftDropdown()">${custOpts}</select>
         </div>
+        
+        <!-- Poin Gift Claims Section -->
+        <div class="pk-field" id="pkTrGiftRedeemField">
+          <label>Klaim Hadiah Loyalty</label>
+          <select id="pkTrGiftSelect" onchange="pkTrSelectGift(this.value)">
+            <option value="">-- Pilih Hadiah (Tidak Klaim) --</option>
+          </select>
+          <div id="pkTrGiftInfo" style="font-size:12px;font-weight:700;color:var(--success);margin-top:6px;display:none;"></div>
+        </div>
+
         <div class="pk-field">
           <label>Diskon (Rp)</label>
           <input type="number" id="pkTrDiskon" value="0" oninput="pkRenderCart()">
@@ -1383,6 +1406,57 @@ function pkRenderTransaksi(){
   }
   
   pkRenderCart();
+  if(pkTrStep === 'pelanggan'){
+    pkTrUpdateGiftDropdown();
+  }
+}
+
+let pkTrClaimedGiftId = null;
+
+function pkTrUpdateGiftDropdown(){
+  const pelangganId = Number(document.getElementById('pkTrPelanggan')?.value||0);
+  const pelanggan = DB.pelanggan.find(c=>c.id===pelangganId);
+  const select = document.getElementById('pkTrGiftSelect');
+  const info = document.getElementById('pkTrGiftInfo');
+  if(!select) return;
+  
+  if(!pelanggan){
+    select.innerHTML = '<option value="">-- Pilih Pelanggan Terlebih Dahulu --</option>';
+    info.style.display = 'none';
+    return;
+  }
+  
+  const pts = pelanggan.poin || 0;
+  let html = '<option value="">-- Pilih Hadiah (Tidak Klaim) --</option>';
+  
+  if(DB.hadiah && DB.hadiah.length > 0){
+    DB.hadiah.forEach(h => {
+      const label = `${h.nama} (${h.poin_required} Poin) ${pts >= h.poin_required ? '✓ Tersedia' : '✗ Poin Kurang'}`;
+      const disabled = pts >= h.poin_required ? '' : 'disabled';
+      html += `<option value="${h.id}" ${disabled}>${label}</option>`;
+    });
+  } else {
+    html = '<option value="">-- Belum ada hadiah terdaftar --</option>';
+  }
+  
+  select.innerHTML = html;
+  info.style.display = 'none';
+  pkTrClaimedGiftId = null;
+}
+
+function pkTrSelectGift(val){
+  pkTrClaimedGiftId = val ? Number(val) : null;
+  const info = document.getElementById('pkTrGiftInfo');
+  if(!info) return;
+  if(pkTrClaimedGiftId){
+    const h = DB.hadiah.find(x=>x.id===pkTrClaimedGiftId);
+    if(h){
+      info.innerText = `✓ Klaim ${h.nama} (Akan mengurangi ${h.poin_required} Poin)`;
+      info.style.display = 'block';
+      return;
+    }
+  }
+  info.style.display = 'none';
 }
 function pkTrSearchProduk(q){
   q=q.toLowerCase();
@@ -1566,9 +1640,42 @@ function pkCheckout(){
   const now = new Date().toISOString();
   const pelanggan = DB.pelanggan.find(c=>c.id===pelangganId);
 
+  // Calculate points based on individual products / variants
   let poinDidapat = 0;
-  if(pelanggan && pelanggan.tipe==='member' && metode!=='piutang'){
-    poinDidapat = Math.floor(total / DB.pengaturan.poin_per_rupiah);
+  if(pelanggan && pelanggan.tipe==='member'){
+    pkCart.forEach(c => {
+      const p = DB.produk.find(x=>x.id===c.produk_id);
+      if(p){
+        let itemPoin = 0;
+        if(p.has_varian && c.varian){
+          const v = p.varian.find(x=>x.nama===c.varian);
+          if(v) itemPoin = v.poin || 0;
+        } else {
+          itemPoin = p.poin || 0;
+        }
+        poinDidapat += Number((itemPoin * c.qty).toFixed(2));
+      }
+    });
+  }
+
+  // Handle gift claim validation
+  const giftId = pkTrClaimedGiftId;
+  let giftNama = '';
+  let giftPoinRequired = 0;
+  if(giftId){
+    if(!pelanggan){
+      alert('Hadiah hanya dapat diklaim oleh pelanggan terdaftar!');
+      return;
+    }
+    const h = DB.hadiah.find(x=>x.id===giftId);
+    if(h){
+      if(pelanggan.poin < h.poin_required){
+        alert('Poin pelanggan tidak mencukupi untuk mengklaim hadiah ini.');
+        return;
+      }
+      giftNama = h.nama;
+      giftPoinRequired = h.poin_required;
+    }
   }
 
   const trId = pkNextId('transaksi');
@@ -1580,7 +1687,8 @@ function pkCheckout(){
     id:trId, no:noTrans, tanggal:now, pelanggan_id:pelangganId, kasir_id:session.id,
     subtotal, diskon, total, metode_bayar:metode,
     status_bayar: metode==='piutang' ? 'belum_lunas' : 'lunas', poin_didapat:poinDidapat,
-    bayar, kembalian
+    bayar, kembalian,
+    hadiah_klaim: giftNama, hadiah_poin: giftPoinRequired
   });
 
   pkCart.forEach(c=>{
@@ -1603,10 +1711,15 @@ function pkCheckout(){
     pelanggan.poin += poinDidapat;
     DB.poinLog.push({id:pkNextId('poinLog'), pelanggan_id:pelangganId, transaksi_id:trId, jenis:'dapat', jumlah:poinDidapat, tanggal:now, keterangan:'Dari transaksi '+noTrans});
   }
+  if(giftPoinRequired>0){
+    pelanggan.poin -= giftPoinRequired;
+    DB.poinLog.push({id:pkNextId('poinLog'), pelanggan_id:pelangganId, transaksi_id:trId, jenis:'tukar', jumlah:giftPoinRequired, tanggal:now, keterangan:'Klaim hadiah: '+giftNama+' ('+noTrans+')'});
+  }
   pkSave();
   pkCetakStruk(trId);
   pkCart = [];
   pkTrStep = 'produk';
+  pkTrClaimedGiftId = null;
   pkRenderTransaksi();
 }
 function pkCetakStruk(trId){
@@ -1629,7 +1742,19 @@ function pkCetakStruk(trId){
     bayarHtml = `Bayar (${t.metode_bayar.toUpperCase()}): ${pkFmt(t.total)}<br>`;
   }
   
-  html += `<hr>Subtotal: ${pkFmt(t.subtotal)}<br>Diskon: ${pkFmt(t.diskon)}<br><b>Total: ${pkFmt(t.total)}</b><br>${bayarHtml}<hr>${s.footer_struk}`;
+  let poinHtml = '';
+  if(t.poin_didapat > 0 || t.hadiah_klaim){
+    poinHtml = `<hr>Poin Didapat: +${t.poin_didapat}<br>`;
+    if(t.hadiah_klaim){
+      poinHtml += `Klaim Hadiah: ${t.hadiah_klaim} (-${t.hadiah_poin})<br>`;
+    }
+    const c = DB.pelanggan.find(x=>x.id===t.pelanggan_id);
+    if(c){
+      poinHtml += `Sisa Saldo Poin: ${c.poin}<br>`;
+    }
+  }
+  
+  html += `<hr>Subtotal: ${pkFmt(t.subtotal)}<br>Diskon: ${pkFmt(t.diskon)}<br><b>Total: ${pkFmt(t.total)}</b><br>${bayarHtml}${poinHtml}<hr>${s.footer_struk}`;
   
   // Set hidden printable element
   const r = document.getElementById('pk-receipt');
@@ -1988,27 +2113,51 @@ function pkBayarPiutang(piutangId){
 }
 
 /* ================= LOYALTY POIN ================= */
+let pkEditHadiahId = null;
+
 function pkView_loyalty(){
-  const s = DB.pengaturan;
+  pkEditHadiahId = null;
   document.getElementById('pkMain').innerHTML = `
-    <h2>Loyalty Poin Pelanggan</h2>
+    <h2>Loyalty Poin & Klaim Hadiah</h2>
+    
     <div class="pk-card" style="margin-bottom:24px;">
-      <h3 style="margin-top:0;font-family:var(--font-title);">Konfigurasi Poin</h3>
+      <h3 style="margin-top:0;font-family:var(--font-title);" id="pkHdTitle">Tambah Hadiah Baru</h3>
       <div class="pk-flex">
-        <div class="pk-field"><label>Nominal Belanja per 1 Poin (Rp)</label><input type="number" id="pkLoyPerRp" value="${s.poin_per_rupiah}"></div>
-        <div class="pk-field"><label>Nilai 1 Poin (Rp)</label><input type="number" id="pkLoyRpPerPoin" value="${s.rupiah_per_poin}"></div>
-        <div class="pk-field"><label>Minimum Poin untuk Ditukar</label><input type="number" id="pkLoyMin" value="${s.min_tukar_poin}"></div>
+        <div class="pk-field" style="flex:2;"><label>Nama Hadiah</label><input id="pkHdNama" placeholder="Contoh: Kaos Keren, Payung Cantik"></div>
+        <div class="pk-field" style="flex:1;"><label>Poin yang Dibutuhkan</label><input type="number" id="pkHdPoin" placeholder="Contoh: 10"></div>
       </div>
-      <button class="pk-btn" onclick="pkSaveLoyalty()">Simpan Pengaturan</button>
+      <div style="display:flex;gap:12px;margin-top:12px;">
+        <button class="pk-btn" id="pkHdBtnSimpan" onclick="pkAddHadiah()">Simpan Hadiah</button>
+        <button class="pk-btn pk-btn-sec pk-hidden" id="pkHdBtnBatal" onclick="pkView_loyalty()">Batal</button>
+      </div>
     </div>
-    <h3 style="margin-top:24px;">Riwayat Perolehan Poin</h3>
-    <table class="pk-table"><tr><th>Pelanggan</th><th>Jenis</th><th>Jumlah</th><th>Tanggal</th><th>Keterangan</th></tr>
+
+    <h3 style="margin-top:24px;">Daftar Hadiah</h3>
+    <table class="pk-table">
+      <tr><th>Nama Hadiah</th><th>Kebutuhan Poin</th><th>Aksi</th></tr>
+      ${(DB.hadiah||[]).map(h=>`
+        <tr>
+          <td data-label="Nama Hadiah">${h.nama}</td>
+          <td data-label="Kebutuhan Poin">${h.poin_required} Poin</td>
+          <td data-label="">
+            <button class="pk-btn pk-btn-sm" style="background:#3b82f6;margin-right:4px;" onclick="pkLoadEditHadiah(${h.id})">Edit</button>
+            <button class="pk-btn pk-btn-danger pk-btn-sm" onclick="pkDelHadiah(${h.id})">Hapus</button>
+          </td>
+        </tr>
+      `).join('') || '<tr><td colspan="3" style="text-align:center;">Belum ada daftar hadiah</td></tr>'}
+    </table>
+
+    <h3 style="margin-top:32px;">Riwayat Poin Pelanggan</h3>
+    <table class="pk-table">
+      <tr><th>Pelanggan</th><th>Jenis</th><th>Jumlah Poin</th><th>Tanggal</th><th>Keterangan</th></tr>
       ${DB.poinLog.slice().reverse().map(l=>{
         const c = DB.pelanggan.find(x=>x.id===l.pelanggan_id);
+        const badgeColor = l.jenis === 'dapat' ? 'pk-badge-green' : 'pk-badge-red';
+        const jenisText = l.jenis === 'dapat' ? '+ Tambah' : '- Tukar/Klaim';
         return `<tr>
           <td data-label="Pelanggan">${c?c.nama:'-'}</td>
-          <td data-label="Jenis">${l.jenis}</td>
-          <td data-label="Jumlah">${l.jumlah}</td>
+          <td data-label="Jenis"><span class="pk-badge ${badgeColor}">${jenisText}</span></td>
+          <td data-label="Jumlah Poin">${l.jumlah} Poin</td>
           <td data-label="Tanggal">${l.tanggal.slice(0,10)}</td>
           <td data-label="Keterangan">${l.keterangan}</td>
         </tr>`;
@@ -2016,12 +2165,53 @@ function pkView_loyalty(){
     </table>
   `;
 }
-function pkSaveLoyalty(){
-  DB.pengaturan.poin_per_rupiah = Number(document.getElementById('pkLoyPerRp').value||10000);
-  DB.pengaturan.rupiah_per_poin = Number(document.getElementById('pkLoyRpPerPoin').value||100);
-  DB.pengaturan.min_tukar_poin = Number(document.getElementById('pkLoyMin').value||10);
+
+function pkAddHadiah(){
+  const nama = document.getElementById('pkHdNama').value.trim();
+  const poin = Number(document.getElementById('pkHdPoin').value||0);
+  if(!nama || poin <= 0) {
+    alert('Nama dan jumlah poin penukaran harus valid!');
+    return;
+  }
+  
+  if(!DB.hadiah) DB.hadiah = [];
+  
+  if(pkEditHadiahId){
+    const h = DB.hadiah.find(x=>x.id===pkEditHadiahId);
+    if(h){
+      h.nama = nama;
+      h.poin_required = poin;
+    }
+    pkEditHadiahId = null;
+  } else {
+    DB.hadiah.push({
+      id: pkNextId('hadiah'),
+      nama: nama,
+      poin_required: poin
+    });
+  }
   pkSave();
-  alert('Pengaturan poin disimpan');
+  pkView_loyalty();
+}
+
+function pkLoadEditHadiah(id){
+  const h = DB.hadiah.find(x=>x.id===id);
+  if(!h) return;
+  pkEditHadiahId = id;
+  document.getElementById('pkHdNama').value = h.nama;
+  document.getElementById('pkHdPoin').value = h.poin_required;
+  document.getElementById('pkHdTitle').innerText = 'Edit Hadiah';
+  document.getElementById('pkHdBtnSimpan').innerText = 'Simpan Perubahan';
+  document.getElementById('pkHdBtnBatal').classList.remove('pk-hidden');
+  window.scrollTo(0,0);
+}
+
+function pkDelHadiah(id){
+  if(confirm('Apakah Anda yakin ingin menghapus hadiah ini?')){
+    DB.hadiah = DB.hadiah.filter(x=>x.id!==id);
+    pkSave();
+    pkView_loyalty();
+  }
 }
 
 /* ================= KARYAWAN ================= */
@@ -2210,7 +2400,7 @@ function pkImportData(){
     try{
       const parsed = JSON.parse(e.target.result);
       if(!parsed.produk || !parsed.pengaturan){ throw new Error('Format file tidak sesuai'); }
-      const defaultKeys = ['users', 'karyawan', 'kategori', 'produk', 'pelanggan', 'supplier', 'transaksi', 'transaksiDetail', 'pembelian', 'pembelianDetail', 'hutang', 'piutang', 'bayarHutang', 'bayarPiutang', 'poinLog', 'stokLog', 'pengaturan'];
+      const defaultKeys = ['users', 'karyawan', 'kategori', 'produk', 'pelanggan', 'supplier', 'transaksi', 'transaksiDetail', 'pembelian', 'pembelianDetail', 'hutang', 'piutang', 'bayarHutang', 'bayarPiutang', 'poinLog', 'stokLog', 'pengaturan', 'hadiah'];
       defaultKeys.forEach(k => {
         if(!parsed[k]) parsed[k] = (k === 'pengaturan') ? {} : [];
       });
