@@ -1081,6 +1081,71 @@ function pkView_transaksi(){
   pkRenderTransaksi();
 }
 
+function pkGetCashSuggestions(total) {
+  const suggestions = [total];
+  const denoms = [10000, 20000, 50000, 100000];
+  denoms.forEach(d => {
+    if (d > total && !suggestions.includes(d)) {
+      suggestions.push(d);
+    }
+  });
+  const next50k = Math.ceil(total / 50000) * 50000;
+  if (next50k > total && !suggestions.includes(next50k)) {
+    suggestions.push(next50k);
+  }
+  const next10k = Math.ceil(total / 10000) * 10000;
+  if (next10k > total && !suggestions.includes(next10k)) {
+    suggestions.push(next10k);
+  }
+  suggestions.sort((a,b)=>a-b);
+  
+  return suggestions.slice(0, 5).map(s => {
+    const label = s === total ? 'Uang Pas' : pkFmt(s);
+    return `<button class="pk-btn pk-btn-sec pk-btn-sm" style="padding:6px 10px;font-size:12px;font-weight:600;" onclick="pkSetCashReceived(${s})">${label}</button>`;
+  }).join('');
+}
+
+function pkSetCashReceived(val){
+  const el = document.getElementById('pkTrBayar');
+  if(el){
+    el.value = val;
+    pkCalcKembalian();
+  }
+}
+
+function pkCalcKembalian(){
+  const subtotal = pkCart.reduce((a,c)=>a+c.harga*c.qty,0);
+  const diskon = Number(document.getElementById('pkTrDiskon')?.value||0);
+  const total = Math.max(0, subtotal - diskon);
+  const bayar = Number(document.getElementById('pkTrBayar')?.value||0);
+  const kembalian = Math.max(0, bayar - total);
+  
+  const kembalianEl = document.getElementById('pkTrKembalian');
+  if(kembalianEl) {
+    kembalianEl.innerText = pkFmt(kembalian);
+    if (bayar >= total) {
+      kembalianEl.style.color = 'var(--success)';
+    } else {
+      kembalianEl.style.color = 'var(--danger)';
+    }
+  }
+}
+
+function pkTrOnMetodeChange(val){
+  const cashField = document.getElementById('pkCashFieldWrapper');
+  if(!cashField) return;
+  if(val === 'tunai'){
+    cashField.style.display = 'block';
+    const subtotal = pkCart.reduce((a,c)=>a+c.harga*c.qty,0);
+    const diskon = Number(document.getElementById('pkTrDiskon')?.value||0);
+    const total = Math.max(0, subtotal - diskon);
+    document.getElementById('pkTrBayar').value = total;
+    pkCalcKembalian();
+  } else {
+    cashField.style.display = 'none';
+  }
+}
+
 function pkRenderTransaksi(){
   const main = document.getElementById('pkMain');
   const custOpts = DB.pelanggan.map(c=>`<option value="${c.id}">${c.nama} (poin: ${c.poin})</option>`).join('');
@@ -1121,6 +1186,10 @@ function pkRenderTransaksi(){
     `;
     
   } else if(pkTrStep === 'pelanggan'){
+    const subtotal = pkCart.reduce((a,c)=>a+c.harga*c.qty,0);
+    const diskon = Number(document.getElementById('pkTrDiskon')?.value||0);
+    const total = Math.max(0, subtotal - diskon);
+    
     main.innerHTML = `
       <h2>Pelanggan & Pembayaran</h2>
       <button class="pk-btn pk-btn-sec" onclick="pkTrGoToStep('keranjang')" style="margin-bottom:16px;display:inline-flex;align-items:center;gap:8px;">
@@ -1138,13 +1207,30 @@ function pkRenderTransaksi(){
         </div>
         <div class="pk-field">
           <label>Metode Bayar</label>
-          <select id="pkTrMetode">
+          <select id="pkTrMetode" onchange="pkTrOnMetodeChange(this.value)">
             <option value="tunai">Tunai</option>
             <option value="transfer">Transfer</option>
             <option value="qris">QRIS</option>
             <option value="piutang">Piutang (belum lunas)</option>
           </select>
         </div>
+        
+        <!-- Tunai Bayar & Kembalian Wrapper -->
+        <div id="pkCashFieldWrapper" style="display:block;">
+          <div class="pk-field">
+            <label>Uang Diterima (Rp)</label>
+            <input type="number" id="pkTrBayar" value="${total}" oninput="pkCalcKembalian()">
+          </div>
+          <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-top:-6px;margin-bottom:8px;">Rekomendasi Uang:</label>
+          <div id="pkCashSuggestions" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+            ${pkGetCashSuggestions(total)}
+          </div>
+          <div style="margin-top:12px;padding:12px 0;border-top:1px dashed var(--border);font-size:15px;font-weight:700;color:var(--text-main);display:flex;justify-content:space-between;">
+            <span>Kembalian:</span>
+            <span id="pkTrKembalian">Rp 0</span>
+          </div>
+        </div>
+
         <div style="margin:20px 0 16px;padding-top:16px;border-top:1px solid var(--border);font-size:16px;font-weight:800;font-family:var(--font-title);color:var(--primary);display:flex;justify-content:space-between;">
           <span>Total Bayar:</span>
           <span id="pkTrTotal">Rp 0</span>
@@ -1311,6 +1397,7 @@ function pkRenderCart(){
   }
 
   if(typeof lucide !== 'undefined') lucide.createIcons();
+  if(typeof pkCalcKembalian === 'function') pkCalcKembalian();
 }
 function pkCheckout(){
   if(!pkCart.length){ alert('Keranjang masih kosong'); return; }
@@ -1320,6 +1407,13 @@ function pkCheckout(){
   const metode = document.getElementById('pkTrMetode').value;
   const subtotal = pkCart.reduce((a,c)=>a+c.harga*c.qty,0);
   const total = Math.max(0, subtotal - diskon);
+  const bayar = metode === 'tunai' ? Number(document.getElementById('pkTrBayar')?.value || total) : total;
+
+  if(metode === 'tunai' && bayar < total){
+    alert('Jumlah uang yang diterima kurang dari total pembayaran!');
+    return;
+  }
+
   const now = new Date().toISOString();
   const pelanggan = DB.pelanggan.find(c=>c.id===pelangganId);
 
@@ -1330,10 +1424,14 @@ function pkCheckout(){
 
   const trId = pkNextId('transaksi');
   const noTrans = 'TRX-' + trId.toString().padStart(5,'0');
+  
+  const kembalian = metode === 'tunai' ? Math.max(0, bayar - total) : 0;
+
   DB.transaksi.push({
     id:trId, no:noTrans, tanggal:now, pelanggan_id:pelangganId, kasir_id:session.id,
     subtotal, diskon, total, metode_bayar:metode,
-    status_bayar: metode==='piutang' ? 'belum_lunas' : 'lunas', poin_didapat:poinDidapat
+    status_bayar: metode==='piutang' ? 'belum_lunas' : 'lunas', poin_didapat:poinDidapat,
+    bayar, kembalian
   });
 
   pkCart.forEach(c=>{
@@ -1372,7 +1470,17 @@ function pkCetakStruk(trId){
     const nama = i.nama_item || (DB.produk.find(x=>x.id===i.produk_id)?.nama) || '-';
     html += `${nama}<br>${i.qty} x ${pkFmt(i.harga)} = ${pkFmt(i.subtotal)}<br>`;
   });
-  html += `<hr>Subtotal: ${pkFmt(t.subtotal)}<br>Diskon: ${pkFmt(t.diskon)}<br><b>Total: ${pkFmt(t.total)}</b><br>Bayar: ${t.metode_bayar}<br><hr>${s.footer_struk}`;
+  
+  let bayarHtml = '';
+  if(t.metode_bayar === 'tunai'){
+    const b = t.bayar !== undefined ? t.bayar : t.total;
+    const k = t.kembalian !== undefined ? t.kembalian : 0;
+    bayarHtml = `Bayar (Tunai): ${pkFmt(b)}<br>Kembalian: ${pkFmt(k)}<br>`;
+  } else {
+    bayarHtml = `Bayar (${t.metode_bayar.toUpperCase()}): ${pkFmt(t.total)}<br>`;
+  }
+  
+  html += `<hr>Subtotal: ${pkFmt(t.subtotal)}<br>Diskon: ${pkFmt(t.diskon)}<br><b>Total: ${pkFmt(t.total)}</b><br>${bayarHtml}<hr>${s.footer_struk}`;
   
   // Set hidden printable element
   const r = document.getElementById('pk-receipt');
