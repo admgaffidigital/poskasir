@@ -1035,25 +1035,103 @@ function pkDelProduk(id){
 }
 
 /* ================= TRANSAKSI (POS) ================= */
-function pkView_transaksi(){
-  pkCart = [];
+/* POS Wizard State */
+let pkTrStep = 'produk';
+
+function pkShowToast(message){
+  let toast = document.getElementById('pkToast');
+  if(!toast){
+    toast = document.createElement('div');
+    toast.id = 'pkToast';
+    toast.style = "position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--primary);color:#ffffff;padding:12px 24px;border-radius:30px;box-shadow:var(--shadow-lg);z-index:99999;font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px;transition:all 0.3s ease;opacity:0;pointer-events:none;";
+    document.body.appendChild(toast);
+  }
+  toast.innerHTML = `<i data-lucide="check-circle" style="width:16px;height:16px;stroke-width:2.5;"></i> ${message}`;
+  if(typeof lucide !== 'undefined') lucide.createIcons();
+  
+  toast.style.opacity = '1';
+  toast.style.top = '30px';
+  
+  setTimeout(()=>{
+    toast.style.opacity = '0';
+    toast.style.top = '20px';
+  }, 2000);
+}
+
+function pkTrGoToStep(step){
+  if(step === 'keranjang' && pkCart.length === 0){
+    alert('Keranjang masih kosong, silakan tambah produk terlebih dahulu.');
+    return;
+  }
+  pkTrStep = step;
   pkRenderTransaksi();
 }
+
+function pkRemoveFromCart(index){
+  pkCart.splice(index, 1);
+  pkRenderCart();
+  if(pkTrStep === 'keranjang' && pkCart.length === 0) {
+    pkTrGoToStep('produk');
+  }
+}
+
+function pkView_transaksi(){
+  pkCart = [];
+  pkTrStep = 'produk';
+  pkRenderTransaksi();
+}
+
 function pkRenderTransaksi(){
+  const main = document.getElementById('pkMain');
   const custOpts = DB.pelanggan.map(c=>`<option value="${c.id}">${c.nama} (poin: ${c.poin})</option>`).join('');
-  document.getElementById('pkMain').innerHTML = `
-    <h2>Transaksi Penjualan</h2>
-    <div class="pk-flex">
-      <div style="flex:2;">
-        <input class="pk-search-box" id="pkTrSearch" placeholder="Cari produk (nama/kode)..." oninput="pkTrSearchProduk(this.value)">
-        <div id="pkTrProdukList" style="max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-md);padding:8px;background:#f8fafc;"></div>
+
+  if(pkTrStep === 'produk'){
+    main.innerHTML = `
+      <h2>Pilih Produk</h2>
+      <input class="pk-search-box" id="pkTrSearch" placeholder="Cari produk (nama/kode)..." oninput="pkTrSearchProduk(this.value)">
+      <div id="pkTrProdukList" style="max-height:480px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-md);padding:8px;background:#f8fafc;"></div>
+      
+      <!-- Floating Cart Button -->
+      <div style="position:fixed;bottom:24px;right:24px;z-index:999;">
+        <button class="pk-btn" onclick="pkTrGoToStep('keranjang')" style="border-radius:50px;padding:16px 24px;box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:10px;font-size:15px;font-weight:700;">
+          <i data-lucide="shopping-cart" style="width:20px;height:20px;"></i>
+          <span>Keranjang</span>
+          <span id="pkTrCartBadge" style="background:#ffffff;color:var(--primary);border-radius:20px;padding:2px 8px;font-size:12px;font-weight:800;">0</span>
+        </button>
       </div>
-      <div style="flex:1;min-width:280px;background:#ffffff;border:1px solid var(--border);border-radius:var(--radius-md);padding:20px;box-shadow:var(--shadow-sm);">
+    `;
+    pkTrSearchProduk('');
+    
+  } else if(pkTrStep === 'keranjang'){
+    main.innerHTML = `
+      <h2>Keranjang Belanja</h2>
+      <button class="pk-btn pk-btn-sec" onclick="pkTrGoToStep('produk')" style="margin-bottom:16px;display:inline-flex;align-items:center;gap:8px;">
+        <i data-lucide="arrow-left" style="width:16px;height:16px;"></i> Tambah Produk Lain
+      </button>
+      <div id="pkCartBox" class="pk-card" style="margin-bottom:20px;"></div>
+      
+      <div class="pk-card" style="margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;padding:16px 20px;">
+        <span style="font-weight:700;font-size:15px;color:var(--text-muted);">Subtotal Belanja:</span>
+        <span id="pkTrSubtotalVal" style="font-size:20px;font-weight:800;color:var(--primary);font-family:var(--font-title);">Rp 0</span>
+      </div>
+      
+      <button class="pk-btn" onclick="pkTrGoToStep('pelanggan')" style="width:100%;padding:14px;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px;">
+        Lanjut ke Pembayaran <i data-lucide="arrow-right" style="width:16px;height:16px;"></i>
+      </button>
+    `;
+    
+  } else if(pkTrStep === 'pelanggan'){
+    main.innerHTML = `
+      <h2>Pelanggan & Pembayaran</h2>
+      <button class="pk-btn pk-btn-sec" onclick="pkTrGoToStep('keranjang')" style="margin-bottom:16px;display:inline-flex;align-items:center;gap:8px;">
+        <i data-lucide="arrow-left" style="width:16px;height:16px;"></i> Kembali ke Keranjang
+      </button>
+      
+      <div class="pk-card" style="margin-bottom:20px;">
         <div class="pk-field">
           <label>Pelanggan</label>
           <select id="pkTrPelanggan">${custOpts}</select>
         </div>
-        <div id="pkCartBox" style="margin-bottom:16px;"></div>
         <div class="pk-field">
           <label>Diskon (Rp)</label>
           <input type="number" id="pkTrDiskon" value="0" oninput="pkRenderCart()">
@@ -1071,11 +1149,11 @@ function pkRenderTransaksi(){
           <span>Total Bayar:</span>
           <span id="pkTrTotal">Rp 0</span>
         </div>
-        <button class="pk-btn" style="width:100%;" onclick="pkCheckout()">Proses & Cetak Struk</button>
+        <button class="pk-btn" style="width:100%;padding:14px;" onclick="pkCheckout()">Proses & Cetak Struk</button>
       </div>
-    </div>
-  `;
-  pkTrSearchProduk('');
+    `;
+  }
+  
   pkRenderCart();
 }
 function pkTrSearchProduk(q){
@@ -1154,6 +1232,7 @@ function pkAddToCart(id, varian=''){
     pkCart.push({produk_id:id, nama:p.nama, varian:varian, harga:hrgJual, harga_beli:hrgBeli, hrg_jual_asli:hrgJual, is_custom_price:false, qty:1});
   }
   pkRenderCart();
+  pkShowToast(`${p.nama} ${varian ? `(${varian})` : ''} berhasil ditambahkan!`);
 }
 function pkSetQtyByIndex(index, val){
   const item = pkCart[index];
@@ -1169,6 +1248,9 @@ function pkSetQtyByIndex(index, val){
     item.qty = qty;
   }
   pkRenderCart();
+  if(pkTrStep === 'keranjang' && pkCart.length === 0) {
+    pkTrGoToStep('produk');
+  }
 }
 function pkSetHargaByIndex(index, val){
   const item = pkCart[index];
@@ -1197,19 +1279,37 @@ function pkRenderCart(){
   const subtotal = pkCart.reduce((a,c)=>a+c.harga*c.qty,0);
   const diskon = Number(document.getElementById('pkTrDiskon')?.value||0);
   const total = Math.max(0, subtotal - diskon);
-  document.getElementById('pkCartBox').innerHTML = pkCart.length ? pkCart.map((c,i)=>`
-    <div class="pk-cart-row" style="flex-wrap:wrap;">
-      <div style="flex:1;min-width:120px;">${c.nama} ${c.varian ? `<br><small style="color:#047857">${c.varian}</small>` : ''}</div>
-      <div style="display:flex;gap:6px;align-items:center;">
-        <input type="number" step="0.01" style="width:70px;" value="${c.qty}" onchange="pkSetQtyByIndex(${i}, this.value)" title="Qty">
-        <span style="color:#888;">x</span>
-        <input type="number" style="width:100px;" value="${c.harga}" onchange="pkSetHargaByIndex(${i}, this.value)" title="Harga Satuan">
+
+  const cartBox = document.getElementById('pkCartBox');
+  if(cartBox){
+    cartBox.innerHTML = pkCart.length ? pkCart.map((c,i)=>`
+      <div class="pk-cart-row" style="flex-wrap:wrap;padding:12px 0;">
+        <div style="flex:1;min-width:120px;">
+          <span style="font-weight:600;color:var(--text-main);">${c.nama}</span>
+          ${c.varian ? `<br><small style="color:#047857;font-weight:500;">Varian: ${c.varian}</small>` : ''}
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <input type="number" step="0.01" style="width:70px;text-align:center;" value="${c.qty}" onchange="pkSetQtyByIndex(${i}, this.value)" title="Qty">
+          <span style="color:#888;">x</span>
+          <input type="number" style="width:100px;text-align:right;" value="${c.harga}" onchange="pkSetHargaByIndex(${i}, this.value)" title="Harga Satuan">
+          <button class="pk-btn pk-btn-danger pk-btn-sm" onclick="pkRemoveFromCart(${i})" style="padding:6px 10px;margin-left:4px;display:inline-flex;align-items:center;justify-content:center;"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
+        </div>
+        <div style="text-align:right;width:80px;font-weight:700;color:var(--primary);font-family:var(--font-title);">${pkFmt(c.harga*c.qty)}</div>
       </div>
-      <div style="text-align:right;width:80px;font-weight:600;">${pkFmt(c.harga*c.qty)}</div>
-    </div>
-  `).join('') : '<div style="text-align:center;padding:24px 12px;color:var(--text-muted);border:2px dashed var(--border);border-radius:var(--radius-md);margin-bottom:16px;font-size:13px;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:6px;"><i data-lucide="shopping-cart" style="width:28px;height:28px;color:#94a3b8;"></i><span>Keranjang belanja kosong</span></div>';
+    `).join('') : '<div style="text-align:center;padding:24px 12px;color:var(--text-muted);border:2px dashed var(--border);border-radius:var(--radius-md);margin-bottom:16px;font-size:13px;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:6px;"><i data-lucide="shopping-cart" style="width:28px;height:28px;color:#94a3b8;"></i><span>Keranjang belanja kosong</span></div>';
+  }
+
+  const subtotalEl = document.getElementById('pkTrSubtotalVal');
+  if(subtotalEl) subtotalEl.innerText = pkFmt(subtotal);
+
   const totalEl = document.getElementById('pkTrTotal');
   if(totalEl) totalEl.innerText = pkFmt(total);
+
+  const badgeEl = document.getElementById('pkTrCartBadge');
+  if(badgeEl){
+    badgeEl.innerText = pkCart.reduce((a,c)=>a+c.qty,0);
+  }
+
   if(typeof lucide !== 'undefined') lucide.createIcons();
 }
 function pkCheckout(){
@@ -1259,6 +1359,7 @@ function pkCheckout(){
   pkSave();
   pkCetakStruk(trId);
   pkCart = [];
+  pkTrStep = 'produk';
   pkRenderTransaksi();
 }
 function pkCetakStruk(trId){
