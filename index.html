@@ -232,13 +232,59 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #ffffff;
+  background: #0f172a; /* Hardware POS Dark Slate */
+  color: #ffffff;
   padding: 16px 32px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid #1e293b;
   box-shadow: var(--shadow-sm);
   position: sticky;
   top: 0;
   z-index: 10;
+}
+.pk-topbar #pkUserLabel {
+  color: #94a3b8 !important;
+}
+.pk-topbar #pkStoreName {
+  color: #2dd4bf !important; /* Touchscreen Terminal highlight color */
+}
+
+/* Cash Register Style Category Tab Buttons */
+.pk-tab-btn {
+  flex: 0 0 auto;
+  padding: 8px 16px;
+  border-radius: 30px;
+  background: #e2e8f0;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-body);
+}
+.pk-tab-btn:hover {
+  background: #cbd5e1;
+  color: var(--text-main);
+}
+.pk-tab-btn.active {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Touchscreen Cash Register Product Cards */
+.pk-product-touch-card {
+  transition: all 0.2s ease-in-out;
+}
+.pk-product-touch-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+.pk-product-touch-card:active {
+  transform: translateY(1px);
+  background: #f8fafc !important;
 }
 .pk-content {
   padding: 32px;
@@ -1037,6 +1083,7 @@ function pkDelProduk(id){
 /* ================= TRANSAKSI (POS) ================= */
 /* POS Wizard State */
 let pkTrStep = 'produk';
+let pkTrCategory = 'all';
 
 function pkShowToast(message){
   let toast = document.getElementById('pkToast');
@@ -1075,9 +1122,23 @@ function pkRemoveFromCart(index){
   }
 }
 
+function pkSelectTrCategory(catId){
+  pkTrCategory = catId.toString();
+  const tabsContainer = document.getElementById('pkTrCategoryTabs');
+  if(tabsContainer){
+    tabsContainer.querySelectorAll('button').forEach(btn => {
+      btn.classList.remove('active');
+    });
+    const activeBtn = document.getElementById(`pkTab-${catId}`);
+    if(activeBtn) activeBtn.classList.add('active');
+  }
+  pkTrSearchProduk(document.getElementById('pkTrSearch')?.value || '');
+}
+
 function pkView_transaksi(){
   pkCart = [];
   pkTrStep = 'produk';
+  pkTrCategory = 'all';
   pkRenderTransaksi();
 }
 
@@ -1151,10 +1212,18 @@ function pkRenderTransaksi(){
   const custOpts = DB.pelanggan.map(c=>`<option value="${c.id}">${c.nama} (poin: ${c.poin})</option>`).join('');
 
   if(pkTrStep === 'produk'){
+    const categoryTabs = `
+      <div id="pkTrCategoryTabs" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:12px;margin-bottom:16px;scrollbar-width:none;-webkit-overflow-scrolling:touch;">
+        <button id="pkTab-all" class="pk-tab-btn ${pkTrCategory==='all'?'active':''}" onclick="pkSelectTrCategory('all')">Semua</button>
+        ${DB.kategori.map(k=>`<button id="pkTab-${k.id}" class="pk-tab-btn ${pkTrCategory===k.id.toString()?'active':''}" onclick="pkSelectTrCategory(${k.id})">${k.nama}</button>`).join('')}
+      </div>
+    `;
+    
     main.innerHTML = `
       <h2>Pilih Produk</h2>
       <input class="pk-search-box" id="pkTrSearch" placeholder="Cari produk (nama/kode)..." oninput="pkTrSearchProduk(this.value)">
-      <div id="pkTrProdukList" style="max-height:480px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-md);padding:8px;background:#f8fafc;"></div>
+      ${categoryTabs}
+      <div id="pkTrProdukList" style="max-height:480px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-md);padding:12px;background:#f8fafc;"></div>
       
       <!-- Floating Cart Button -->
       <div style="position:fixed;bottom:24px;right:24px;z-index:999;">
@@ -1244,26 +1313,33 @@ function pkRenderTransaksi(){
 }
 function pkTrSearchProduk(q){
   q=q.toLowerCase();
-  const list = DB.produk.filter(p=>p.status!=='nonaktif' && (p.nama.toLowerCase().includes(q)||p.kode.toLowerCase().includes(q)));
-  document.getElementById('pkTrProdukList').innerHTML = list.map(p=>{
+  let list = DB.produk.filter(p=>p.status!=='nonaktif');
+  if(pkTrCategory !== 'all') {
+    list = list.filter(p => p.kategori_id === Number(pkTrCategory));
+  }
+  if(q) {
+    list = list.filter(p => p.nama.toLowerCase().includes(q) || p.kode.toLowerCase().includes(q));
+  }
+  
+  const gridHtml = list.map(p=>{
     let st = p.has_varian ? (p.varian||[]).reduce((a,v)=>a+v.stok,0) : p.stok;
     const isLow = st <= p.stok_min;
+    const katNama = DB.kategori.find(k=>k.id===p.kategori_id)?.nama || 'Umum';
     return `
-    <div style="background:#ffffff;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;box-shadow:var(--shadow-sm);transition:all 0.2s;">
-      <div style="display:flex;flex-direction:column;gap:2px;">
-        <span style="font-weight:600;font-size:14px;color:var(--text-main);">${p.nama}</span>
-        <div style="display:flex;align-items:center;gap:6px;font-size:12px;">
-          <span style="color:var(--text-muted);font-weight:500;">Kode: ${p.kode}</span>
-          <span style="color:#cbd5e1;">|</span>
-          <span class="${isLow ? 'pk-badge pk-badge-red' : 'pk-badge pk-badge-green'}" style="padding:2px 6px;font-size:10px;text-transform:none;letter-spacing:0;">Stok: ${st}</span>
-        </div>
+    <div onclick="pkShowVarianModal(${p.id})" class="pk-product-touch-card" style="background:#ffffff;border:1px solid var(--border);border-radius:var(--radius-md);padding:12px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:var(--shadow-sm);cursor:pointer;transition:all 0.2s;position:relative;height:120px;text-align:left;">
+      <div>
+        <div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;letter-spacing:0.5px;">${katNama}</div>
+        <div style="font-weight:700;font-size:13px;color:var(--text-main);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${p.nama}</div>
       </div>
-      <div style="display:flex;align-items:center;gap:12px;">
-        <span style="font-weight:700;color:var(--primary);font-size:15px;font-family:var(--font-title);">${pkFmt(p.harga_jual)}</span>
-        <button class="pk-btn pk-btn-sm" style="padding:6px 12px;" onclick="pkShowVarianModal(${p.id})">+ Tambah</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+        <span style="font-weight:800;color:var(--primary);font-size:14px;font-family:var(--font-title);">${pkFmt(p.harga_jual)}</span>
+        <span class="${isLow ? 'pk-badge pk-badge-red' : 'pk-badge pk-badge-green'}" style="font-size:9px;padding:2px 5px;text-transform:none;letter-spacing:0;">Stok: ${st}</span>
       </div>
     </div>
-  `}).join('') || '<div style="text-align:center;padding:16px;color:var(--text-muted);font-size:13px;font-weight:500;">Produk tidak ditemukan</div>';
+    `;
+  }).join('');
+
+  document.getElementById('pkTrProdukList').innerHTML = gridHtml ? `<div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(130px, 1fr));gap:12px;">${gridHtml}</div>` : '<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:13px;font-weight:500;">Produk tidak ditemukan</div>';
 }
 function pkShowVarianModal(id){
   const p = DB.produk.find(x=>x.id===id);
