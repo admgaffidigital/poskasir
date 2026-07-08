@@ -11,11 +11,15 @@
 
 :root {
   --primary: #0d9488;
+  --primary-rgb: 13, 148, 136;
   --primary-hover: #0f766e;
   --primary-light: #f0fdfa;
   --success: #10b981;
+  --success-rgb: 16, 185, 129;
   --danger: #ef4444;
+  --danger-rgb: 239, 68, 68;
   --warning: #f59e0b;
+  --warning-rgb: 245, 158, 11;
   --bg-main: #f8fafc;
   --bg-card: #ffffff;
   --text-main: #0f172a;
@@ -150,6 +154,20 @@
 .pk-btn-danger:hover {
   background: #dc2626;
   box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.25);
+}
+.pk-btn-blue {
+  background: #3b82f6;
+}
+.pk-btn-blue:hover {
+  background: #2563eb;
+  box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.25);
+}
+.pk-btn-warning {
+  background: #f59e0b;
+}
+.pk-btn-warning:hover {
+  background: #d97706;
+  box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.25);
 }
 .pk-btn-sm {
   padding: 8px 16px;
@@ -422,17 +440,48 @@
 
 /* Badges */
 .pk-badge {
-  display: inline-block;
-  padding: 6px 12px;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
   border-radius: 20px;
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
 }
-.pk-badge-red { background: #fee2e2; color: #ef4444; }
-.pk-badge-green { background: #d1fae5; color: #10b981; }
-.pk-badge-amber { background: #fef3c7; color: #f59e0b; }
+.pk-badge-red    { background: #fee2e2; color: #dc2626; }
+.pk-badge-green  { background: #d1fae5; color: #059669; }
+.pk-badge-amber  { background: #fef3c7; color: #d97706; }
+.pk-badge-blue   { background: #dbeafe; color: #2563eb; }
+.pk-badge-slate  { background: #f1f5f9; color: #475569; }
+.pk-badge-violet { background: #ede9fe; color: #7c3aed; }
+
+/* Empty State */
+.pk-empty-state {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Section heading with icon */
+.pk-section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--border);
+}
+.pk-section-header h3 {
+  margin: 0;
+  font-family: var(--font-title);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-main);
+}
 
 /* Cart */
 .pk-cart-row {
@@ -649,7 +698,7 @@
             <button id='pkBtnBack' class='pk-btn pk-btn-sec pk-btn-sm pk-hidden' onclick='pkNav("home")' style='display:inline-flex;align-items:center;gap:6px;'>
               <i data-lucide="arrow-left" style="width:14px;height:14px;stroke-width:2.5;"></i> Menu
             </button>
-            <div id='pkStoreName' style='font-weight:bold;font-size:18px;color:#111827;'></div>
+            <div id='pkStoreName' style='font-weight:800;font-size:18px;font-family:var(--font-title);letter-spacing:-0.3px;'></div>
           </div>
           <div>
             <span id='pkUserLabel' style='margin-right:16px;font-size:14px;font-weight:500;'></span>
@@ -736,7 +785,7 @@ function pkSeed(){
   };
   DB.meta.nextId = {users:2, karyawan:2, kategori:3, produk:3, pelanggan:1, supplier:1,
     transaksi:0, transaksiDetail:0, pembelian:0, pembelianDetail:0, hutang:0, piutang:0,
-    bayarHutang:0, bayarPiutang:0, poinLog:0, stokLog:0};
+    bayarHutang:0, bayarPiutang:0, poinLog:0, stokLog:0, hadiah:0};
   pkSave();
 }
 
@@ -911,22 +960,67 @@ function pkView_dashboard(){
   const today = pkToday();
   const todayTrans = DB.transaksi.filter(t=>t.tanggal.slice(0,10)===today);
   const omzetToday = todayTrans.reduce((a,t)=>a+t.total,0);
-  const stokMenipis = DB.produk.filter(p=>p.stok <= p.stok_min);
-  const hutangJatuhTempo = DB.hutang.filter(h=>h.status!=='lunas' && h.jatuh_tempo && h.jatuh_tempo<=today);
-  const piutangJatuhTempo = DB.piutang.filter(p=>p.status!=='lunas' && p.jatuh_tempo && p.jatuh_tempo<=today);
+  // Varian-aware stok menipis
+  const stokMenipis = DB.produk.filter(p=>{
+    if(p.status==='nonaktif') return false;
+    const st = p.has_varian ? (p.varian||[]).reduce((a,v)=>a+v.stok,0) : p.stok;
+    return st <= p.stok_min;
+  });
+  const hutangBelumLunas = DB.hutang.filter(h=>h.status!=='lunas');
+  const piutangBelumLunas = DB.piutang.filter(p=>p.status!=='lunas');
+  const hutangJatuhTempo = hutangBelumLunas.filter(h=>h.jatuh_tempo && h.jatuh_tempo<=today);
+  const piutangJatuhTempo = piutangBelumLunas.filter(p=>p.jatuh_tempo && p.jatuh_tempo<=today);
+  const totalHutang = hutangBelumLunas.reduce((a,h)=>a+h.sisa,0);
+  const totalPiutang = piutangBelumLunas.reduce((a,p)=>a+p.sisa,0);
+
   document.getElementById('pkMain').innerHTML = `
     <h2>Dashboard</h2>
-    <div class="pk-grid-dashboard">
-      <div class="pk-card"><h4>Omzet Hari Ini</h4><div class="val">${pkFmt(omzetToday)}</div></div>
-      <div class="pk-card"><h4>Transaksi Hari Ini</h4><div class="val">${todayTrans.length}</div></div>
-      <div class="pk-card"><h4>Stok Menipis</h4><div class="val">${stokMenipis.length}</div></div>
-      <div class="pk-card"><h4>Hutang Jatuh Tempo</h4><div class="val">${hutangJatuhTempo.length}</div></div>
-      <div class="pk-card"><h4>Piutang Jatuh Tempo</h4><div class="val">${piutangJatuhTempo.length}</div></div>
+    <div class="pk-grid-dashboard" style="margin-bottom:24px;">
+      <div style="background:linear-gradient(135deg,#0d9488,#0f766e);color:#fff;border-radius:16px;padding:20px;box-shadow:0 8px 20px -6px rgba(13,148,136,0.35);">
+        <div style="font-size:11px;font-weight:700;opacity:0.85;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">💰 Omzet Hari Ini</div>
+        <div style="font-size:22px;font-weight:800;font-family:var(--font-title);">${pkFmt(omzetToday)}</div>
+        <div style="font-size:11px;opacity:0.75;margin-top:4px;">${todayTrans.length} transaksi</div>
+      </div>
+      <div style="background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;border-radius:16px;padding:20px;box-shadow:0 8px 20px -6px rgba(59,130,246,0.35);">
+        <div style="font-size:11px;font-weight:700;opacity:0.85;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">🧾 Piutang Belum Lunas</div>
+        <div style="font-size:22px;font-weight:800;font-family:var(--font-title);">${pkFmt(totalPiutang)}</div>
+        <div style="font-size:11px;opacity:0.75;margin-top:4px;">${piutangBelumLunas.length} transaksi${piutangJatuhTempo.length>0?` | <b>${piutangJatuhTempo.length} jatuh tempo!</b>`:''}</div>
+      </div>
+      <div style="background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff;border-radius:16px;padding:20px;box-shadow:0 8px 20px -6px rgba(239,68,68,0.35);">
+        <div style="font-size:11px;font-weight:700;opacity:0.85;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">📤 Hutang ke Supplier</div>
+        <div style="font-size:22px;font-weight:800;font-family:var(--font-title);">${pkFmt(totalHutang)}</div>
+        <div style="font-size:11px;opacity:0.75;margin-top:4px;">${hutangBelumLunas.length} tagihan${hutangJatuhTempo.length>0?` | <b>${hutangJatuhTempo.length} jatuh tempo!</b>`:''}</div>
+      </div>
+      <div style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border-radius:16px;padding:20px;box-shadow:0 8px 20px -6px rgba(245,158,11,0.35);">
+        <div style="font-size:11px;font-weight:700;opacity:0.85;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">⚠️ Stok Menipis</div>
+        <div style="font-size:22px;font-weight:800;font-family:var(--font-title);">${stokMenipis.length} Produk</div>
+        <div style="font-size:11px;opacity:0.75;margin-top:4px;">Butuh restok segera</div>
+      </div>
     </div>
-    ${stokMenipis.length ? `<h3 style="margin-top:24px;">Produk Stok Menipis</h3>
-    <table class="pk-table"><tr><th>Kode</th><th>Nama</th><th>Stok</th><th>Min</th></tr>
-    ${stokMenipis.map(p=>`<tr><td data-label="Kode">${p.kode}</td><td data-label="Nama">${p.nama}</td><td data-label="Stok">${p.stok}</td><td data-label="Min">${p.stok_min}</td></tr>`).join('')}
-    </table>` : ''}
+    ${stokMenipis.length ? `
+    <div class="pk-card" style="margin-top:8px;">
+      <h3 style="margin-top:0;margin-bottom:16px;font-family:var(--font-title);font-size:15px;display:flex;align-items:center;gap:8px;">
+        <span style="background:#fef3c7;color:#d97706;width:28px;height:28px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;">⚠</span>
+        Produk Stok Menipis
+      </h3>
+      <table class="pk-table">
+        <tr><th>Kode</th><th>Nama</th><th>Stok</th><th>Min</th><th>Status</th></tr>
+        ${stokMenipis.map(p=>{
+          const st = p.has_varian ? (p.varian||[]).reduce((a,v)=>a+v.stok,0) : p.stok;
+          return `<tr>
+            <td data-label="Kode">${p.kode}</td>
+            <td data-label="Nama">${p.nama}</td>
+            <td data-label="Stok" style="font-weight:700;color:var(--danger);">${st}</td>
+            <td data-label="Min">${p.stok_min}</td>
+            <td data-label="Status"><span class="pk-badge pk-badge-red">Menipis</span></td>
+          </tr>`;
+        }).join('')}
+      </table>
+    </div>` : `
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:12px;">
+      <span style="font-size:20px;">✅</span>
+      <span style="font-weight:600;color:#059669;font-size:14px;">Semua stok produk dalam kondisi aman</span>
+    </div>`}
   `;
 }
 
@@ -2217,24 +2311,33 @@ function pkRenderPembelian(){
     <table class="pk-table"><tr><th>Produk</th><th>Qty</th><th>Harga</th><th>Subtotal</th></tr>
       ${pkPembelianCart.map(i=>`<tr><td data-label="Produk">${i.nama} ${i.varian?`<small>(${i.varian})</small>`:''}</td><td data-label="Qty">${i.qty}</td><td data-label="Harga">${pkFmt(i.harga)}</td><td data-label="Subtotal">${pkFmt(i.qty*i.harga)}</td></tr>`).join('')}
     </table>
-    <p><b>Total: ${pkFmt(pkPembelianCart.reduce((a,i)=>a+i.qty*i.harga,0))}</b></p>
-    <button class="pk-btn" onclick="pkSimpanPembelian()">Simpan & Terima Barang (Update Stok)</button>
-    <h3 style="margin-top:24px;">Riwayat Pembelian</h3>
-    <table class="pk-table"><tr><th>No</th><th>Supplier</th><th>Total</th><th>Status Bayar</th><th>Cetak</th></tr>
-      ${DB.pembelian.map(p=>{
+    <div style="background:#f8fafc;border:1px solid var(--border);border-radius:var(--radius-md);padding:14px 20px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-weight:600;color:var(--text-muted);font-size:13px;">Total Pembelian:</span>
+      <span style="font-weight:800;color:var(--primary);font-size:16px;font-family:var(--font-title);">${pkFmt(pkPembelianCart.reduce((a,i)=>a+i.qty*i.harga,0))}</span>
+    </div>
+    <button class="pk-btn" onclick="pkSimpanPembelian()" style="display:inline-flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <i data-lucide="save" style="width:15px;height:15px;"></i> Simpan & Terima Barang (Update Stok)
+    </button>
+    <h3 style="margin-top:32px;margin-bottom:16px;font-family:var(--font-title);font-size:16px;">Riwayat Pembelian</h3>
+    <table class="pk-table"><tr><th>No</th><th>Tanggal</th><th>Supplier</th><th>Total</th><th>Status</th><th>Cetak</th></tr>
+      ${DB.pembelian.slice().reverse().map(p=>{
         const s = DB.supplier.find(x=>x.id===p.supplier_id);
+        const sbBadge = p.status_bayar === 'lunas'
+          ? '<span class="pk-badge pk-badge-green">Lunas</span>'
+          : '<span class="pk-badge pk-badge-red">Belum Lunas</span>';
         return `<tr>
           <td data-label="No">${p.no}</td>
+          <td data-label="Tanggal">${p.tanggal.slice(0,10)}</td>
           <td data-label="Supplier">${s?s.nama:'-'}</td>
-          <td data-label="Total">${pkFmt(p.total)}</td>
-          <td data-label="Status Bayar">${p.status_bayar}</td>
+          <td data-label="Total" style="font-weight:700;">${pkFmt(p.total)}</td>
+          <td data-label="Status">${sbBadge}</td>
           <td data-label="Cetak">
             <button class="pk-btn pk-btn-sec pk-btn-sm" style="display:inline-flex;align-items:center;gap:4px;" onclick="pkCetakPembelian(${p.id})">
               <i data-lucide="printer" style="width:12px;height:12px;"></i> Struk
             </button>
           </td>
         </tr>`;
-      }).join('')}
+      }).join('') || '<tr><td colspan="6" class="pk-empty-state">Belum ada riwayat pembelian</td></tr>'}
     </table>
   `;
   if(typeof lucide !== 'undefined') lucide.createIcons();
@@ -2332,25 +2435,32 @@ function pkView_hutangpiutang(){
   }
 }
 function pkRenderHutang(){
+  const today = pkToday();
   document.getElementById('pkHpBody').innerHTML = `
     <table class="pk-table"><tr><th>Supplier</th><th>Jumlah</th><th>Sisa</th><th>Jatuh Tempo</th><th>Status</th><th>Cetak</th><th>Bayar</th></tr>
-    ${DB.hutang.map(h=>{
+    ${DB.hutang.slice().reverse().map(h=>{
       const s = DB.supplier.find(x=>x.id===h.supplier_id);
+      const isLate = h.status!=='lunas' && h.jatuh_tempo && h.jatuh_tempo<=today;
+      const statusBadge = h.status==='lunas'
+        ? '<span class="pk-badge pk-badge-green">Lunas</span>'
+        : h.status==='sebagian'
+        ? '<span class="pk-badge pk-badge-amber">Sebagian</span>'
+        : `<span class="pk-badge pk-badge-red">${isLate?'⚠ Jatuh Tempo':'Belum Lunas'}</span>`;
+      const jtStyle = isLate ? 'color:var(--danger);font-weight:700;' : '';
       return `<tr>
         <td data-label="Supplier">${s?s.nama:'-'}</td>
         <td data-label="Jumlah">${pkFmt(h.jumlah)}</td>
-        <td data-label="Sisa">${pkFmt(h.sisa)}</td>
-        <td data-label="Jatuh Tempo">${h.jatuh_tempo||'-'}</td>
-        <td data-label="Status"><span class="pk-badge ${h.status==='lunas'?'pk-badge-green':'pk-badge-red'}">${h.status}</span></td>
+        <td data-label="Sisa" style="font-weight:700;color:${h.status==='lunas'?'var(--success)':'var(--danger)'}">${pkFmt(h.sisa)}</td>
+        <td data-label="Jatuh Tempo" style="${jtStyle}">${h.jatuh_tempo||'-'}</td>
+        <td data-label="Status">${statusBadge}</td>
         <td data-label="Cetak">
           <button class="pk-btn pk-btn-sec pk-btn-sm" style="display:inline-flex;align-items:center;gap:4px;" onclick="pkCetakPembelian(${h.pembelian_id})">
             <i data-lucide="printer" style="width:12px;height:12px;"></i> Struk
           </button>
         </td>
-        <td data-label="Bayar">${h.status!=='lunas'?`<input type="number" placeholder="Jumlah" id="pkBayarH${h.id}" style="width:90px;margin-right:8px;">
-        <button class="pk-btn pk-btn-sm" onclick="pkBayarHutang(${h.id})">Bayar</button>`:'-'}</td>
+        <td data-label="Bayar">${h.status!=='lunas'?`<div style="display:flex;gap:6px;align-items:center;"><input type="number" placeholder="Jumlah bayar" id="pkBayarH${h.id}" style="width:110px;"><button class="pk-btn pk-btn-sm" onclick="pkBayarHutang(${h.id})">Bayar</button></div>`:'-'}</td>
       </tr>`;
-    }).join('') || '<tr><td colspan="7">Belum ada hutang</td></tr>'}
+    }).join('') || '<tr><td colspan="7" class="pk-empty-state">Belum ada data hutang</td></tr>'}
     </table>
   `;
   if(typeof lucide !== 'undefined') lucide.createIcons();
@@ -2365,24 +2475,29 @@ function pkBayarHutang(hutangId){
   pkSave(); pkRenderHutang();
 }
 function pkRenderPiutang(){
+  const today = pkToday();
   document.getElementById('pkHpBody').innerHTML = `
     <table class="pk-table"><tr><th>Pelanggan</th><th>Jumlah</th><th>Sisa</th><th>Status</th><th>Cetak</th><th>Bayar</th></tr>
-    ${DB.piutang.map(p=>{
+    ${DB.piutang.slice().reverse().map(p=>{
       const c = DB.pelanggan.find(x=>x.id===p.pelanggan_id);
+      const statusBadge = p.status==='lunas'
+        ? '<span class="pk-badge pk-badge-green">Lunas</span>'
+        : p.status==='sebagian'
+        ? '<span class="pk-badge pk-badge-amber">Sebagian</span>'
+        : '<span class="pk-badge pk-badge-red">Belum Lunas</span>';
       return `<tr>
         <td data-label="Pelanggan">${c?c.nama:'-'}</td>
         <td data-label="Jumlah">${pkFmt(p.jumlah)}</td>
-        <td data-label="Sisa">${pkFmt(p.sisa)}</td>
-        <td data-label="Status"><span class="pk-badge ${p.status==='lunas'?'pk-badge-green':'pk-badge-red'}">${p.status}</span></td>
+        <td data-label="Sisa" style="font-weight:700;color:${p.status==='lunas'?'var(--success)':'var(--danger)'}">${pkFmt(p.sisa)}</td>
+        <td data-label="Status">${statusBadge}</td>
         <td data-label="Cetak">
           <button class="pk-btn pk-btn-sec pk-btn-sm" style="display:inline-flex;align-items:center;gap:4px;" onclick="pkCetakStruk(${p.transaksi_id})">
             <i data-lucide="printer" style="width:12px;height:12px;"></i> Struk
           </button>
         </td>
-        <td data-label="Bayar">${p.status!=='lunas'?`<input type="number" placeholder="Jumlah" id="pkBayarP${p.id}" style="width:90px;margin-right:8px;">
-        <button class="pk-btn pk-btn-sm" onclick="pkBayarPiutang(${p.id})">Bayar</button>`:'-'}</td>
+        <td data-label="Bayar">${p.status!=='lunas'?`<div style="display:flex;gap:6px;align-items:center;"><input type="number" placeholder="Jumlah bayar" id="pkBayarP${p.id}" style="width:110px;"><button class="pk-btn pk-btn-sm" onclick="pkBayarPiutang(${p.id})">Bayar</button></div>`:'-'}</td>
       </tr>`;
-    }).join('') || '<tr><td colspan="6">Belum ada piutang</td></tr>'}
+    }).join('') || '<tr><td colspan="6" class="pk-empty-state">Belum ada data piutang</td></tr>'}
     </table>
   `;
   if(typeof lucide !== 'undefined') lucide.createIcons();
@@ -2566,21 +2681,37 @@ function pkLoadEditKaryawan(id){
   document.getElementById('pkKyBtnBatal').classList.remove('pk-hidden');
   window.scrollTo(0,0);
 }
+function pkDelKaryawan(id){
+  const k = DB.karyawan.find(x=>x.id===id);
+  if(!k){ return; }
+  if(!confirm(`Hapus karyawan "${k.nama}"? Aksi ini tidak bisa dibatalkan.`)) return;
+  DB.karyawan = DB.karyawan.filter(x=>x.id!==id);
+  pkSave();
+  pkView_karyawan();
+}
 
 /* ================= LAPORAN ================= */
 function pkView_laporan(){
+  const today = pkToday();
+  const firstOfMonth = today.slice(0,7) + '-01';
   document.getElementById('pkMain').innerHTML = `
     <h2>Laporan Penjualan</h2>
     <div class="pk-card" style="margin-bottom:24px;">
-      <h3 style="margin-top:0;font-family:var(--font-title);">Filter Periode</h3>
+      <h3 style="margin-top:0;font-family:var(--font-title);font-size:15px;">Filter Periode</h3>
       <div class="pk-flex" style="align-items:flex-end;">
-        <div class="pk-field" style="margin-bottom:0;"><label>Dari Tanggal</label><input type="date" id="pkLapDari"></div>
-        <div class="pk-field" style="margin-bottom:0;"><label>Sampai Tanggal</label><input type="date" id="pkLapSampai"></div>
-        <div style="flex:0 0 auto;"><button class="pk-btn" onclick="pkRunLaporan()">Tampilkan Laporan</button></div>
+        <div class="pk-field" style="margin-bottom:0;"><label>Dari Tanggal</label><input type="date" id="pkLapDari" value="${firstOfMonth}"></div>
+        <div class="pk-field" style="margin-bottom:0;"><label>Sampai Tanggal</label><input type="date" id="pkLapSampai" value="${today}"></div>
+        <div style="flex:0 0 auto;">
+          <button class="pk-btn" onclick="pkRunLaporan()" style="display:inline-flex;align-items:center;gap:8px;">
+            <i data-lucide="bar-chart-2" style="width:15px;height:15px;"></i> Tampilkan Laporan
+          </button>
+        </div>
       </div>
     </div>
     <div id="pkLapResult"></div>
   `;
+  if(typeof lucide !== 'undefined') lucide.createIcons();
+  pkRunLaporan();
 }
 function pkRunLaporan(){
   const dari = document.getElementById('pkLapDari').value;
@@ -2590,26 +2721,59 @@ function pkRunLaporan(){
     return (!dari || d>=dari) && (!sampai || d<=sampai);
   });
   const totalOmzet = list.reduce((a,t)=>a+t.total,0);
-  document.getElementById('pkLapResult').innerHTML = `
-    <div class="pk-grid-dashboard">
-      <div class="pk-card"><h4>Total Transaksi</h4><div class="val">${list.length}</div></div>
-      <div class="pk-card"><h4>Total Omzet</h4><div class="val">${pkFmt(totalOmzet)}</div></div>
+  const totalDiskon = list.reduce((a,t)=>a+(t.diskon||0),0);
+  const totalTransaksi = list.length;
+
+  // Breakdown per metode bayar
+  const byMetode = {};
+  list.forEach(t=>{ byMetode[t.metode_bayar] = (byMetode[t.metode_bayar]||0) + t.total; });
+  const metodeLabel = {tunai:'💵 Tunai',transfer:'🏦 Transfer',qris:'📱 QRIS',piutang:'📋 Piutang'};
+  const metodeBadge = {tunai:'pk-badge-green',transfer:'pk-badge-blue',qris:'pk-badge-violet',piutang:'pk-badge-red'};
+  const statusBadge = {lunas:'pk-badge-green',belum_lunas:'pk-badge-red',sebagian:'pk-badge-amber'};
+  const statusText = {lunas:'Lunas',belum_lunas:'Belum Lunas',sebagian:'Sebagian'};
+
+  const metodeSummaryHtml = Object.entries(byMetode).map(([m,v])=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px dashed var(--border);">
+      <span style="font-weight:600;font-size:13px;">${metodeLabel[m]||m}</span>
+      <span style="font-weight:700;color:var(--primary);">${pkFmt(v)}</span>
     </div>
-    <h3 style="margin-top:24px;">Rincian Transaksi</h3>
+  `).join('');
+
+  document.getElementById('pkLapResult').innerHTML = `
+    <div class="pk-grid-dashboard" style="margin-bottom:20px;">
+      <div style="background:linear-gradient(135deg,#0d9488,#0f766e);color:#fff;border-radius:16px;padding:20px;box-shadow:0 8px 20px -6px rgba(13,148,136,0.3);">
+        <div style="font-size:11px;font-weight:700;opacity:0.85;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Total Transaksi</div>
+        <div style="font-size:28px;font-weight:800;font-family:var(--font-title);">${totalTransaksi}</div>
+      </div>
+      <div style="background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;border-radius:16px;padding:20px;box-shadow:0 8px 20px -6px rgba(59,130,246,0.3);">
+        <div style="font-size:11px;font-weight:700;opacity:0.85;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Total Omzet</div>
+        <div style="font-size:22px;font-weight:800;font-family:var(--font-title);">${pkFmt(totalOmzet)}</div>
+      </div>
+      <div style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border-radius:16px;padding:20px;box-shadow:0 8px 20px -6px rgba(245,158,11,0.3);">
+        <div style="font-size:11px;font-weight:700;opacity:0.85;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Total Diskon</div>
+        <div style="font-size:22px;font-weight:800;font-family:var(--font-title);">${pkFmt(totalDiskon)}</div>
+      </div>
+    </div>
+    ${Object.keys(byMetode).length > 0 ? `
+    <div class="pk-card" style="margin-bottom:24px;">
+      <h4 style="margin:0 0 12px;font-size:12px;color:var(--text-muted);text-transform:uppercase;font-weight:700;letter-spacing:0.75px;">Rincian per Metode Bayar</h4>
+      ${metodeSummaryHtml}
+    </div>` : ''}
+    <h3 style="margin-bottom:16px;font-family:var(--font-title);font-size:16px;">Rincian Transaksi</h3>
     <table class="pk-table">
-      <tr><th>No</th><th>Tanggal</th><th>Total</th><th>Metode</th><th>Status</th><th>Aksi</th></tr>
-      ${list.map(t=>`<tr>
+      <tr><th>No</th><th>Tanggal</th><th>Total</th><th>Metode</th><th>Status</th><th>Cetak</th></tr>
+      ${list.slice().reverse().map(t=>`<tr>
         <td data-label="No">${t.no}</td>
         <td data-label="Tanggal">${t.tanggal.slice(0,10)}</td>
-        <td data-label="Total">${pkFmt(t.total)}</td>
-        <td data-label="Metode">${t.metode_bayar}</td>
-        <td data-label="Status">${t.status_bayar}</td>
-        <td data-label="Aksi">
+        <td data-label="Total" style="font-weight:700;">${pkFmt(t.total)}</td>
+        <td data-label="Metode"><span class="pk-badge ${metodeBadge[t.metode_bayar]||'pk-badge-slate'}">${(metodeLabel[t.metode_bayar]||t.metode_bayar).replace(/^[^\s]+\s/,'')}</span></td>
+        <td data-label="Status"><span class="pk-badge ${statusBadge[t.status_bayar]||'pk-badge-slate'}">${statusText[t.status_bayar]||t.status_bayar}</span></td>
+        <td data-label="Cetak">
           <button class="pk-btn pk-btn-sm" style="display:inline-flex;align-items:center;gap:4px;" onclick="pkCetakStruk(${t.id})">
             <i data-lucide="printer" style="width:12px;height:12px;"></i> Struk
           </button>
         </td>
-      </tr>`).join('') || '<tr><td colspan="6">Tidak ada data</td></tr>'}
+      </tr>`).join('') || '<tr><td colspan="6" class="pk-empty-state">Tidak ada data transaksi pada periode ini</td></tr>'}
     </table>
   `;
   if(typeof lucide !== 'undefined') lucide.createIcons();
