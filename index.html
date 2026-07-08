@@ -178,8 +178,21 @@ function pkNextId(entity){
 }
 function pkSave(){ localStorage.setItem(PK_KEY, JSON.stringify(DB)); }
 function pkLoad(){
-  const raw = localStorage.getItem(PK_KEY);
-  if(raw){ DB = JSON.parse(raw); return; }
+  try {
+    const raw = localStorage.getItem(PK_KEY);
+    if(raw){
+      DB = JSON.parse(raw);
+      const defaultKeys = ['users', 'karyawan', 'kategori', 'produk', 'pelanggan', 'supplier', 'transaksi', 'transaksiDetail', 'pembelian', 'pembelianDetail', 'hutang', 'piutang', 'bayarHutang', 'bayarPiutang', 'poinLog', 'stokLog', 'pengaturan'];
+      defaultKeys.forEach(k => {
+        if(!DB[k]) DB[k] = (k === 'pengaturan') ? {} : [];
+      });
+      if(!DB.meta) DB.meta = {nextId:{}};
+      if(!DB.meta.nextId) DB.meta.nextId = {};
+      return;
+    }
+  } catch(e) {
+    console.error("Local storage DB corrupted, resetting...", e);
+  }
   pkSeed();
 }
 function pkSeed(){
@@ -403,8 +416,11 @@ function pkRenderProdukList(){
       <div id="pkVarianList"></div>
       <button class="pk-btn pk-btn-sm" onclick="pkAddVarianRow()">+ Tambah Varian</button>
     </div>
-    <button class="pk-btn" onclick="pkAddProduk()">Simpan Produk</button>
-    <h3 style="margin-top:20px;">Daftar Produk</h3>
+    <div style="display:flex;gap:12px;margin-top:12px;">
+      <button class="pk-btn" id="pkPrBtnSimpan" onclick="pkAddProduk()">Simpan Produk</button>
+      <button class="pk-btn pk-btn-sec pk-hidden" id="pkPrBtnBatal" onclick="pkRenderProdukList()">Batal</button>
+    </div>
+    <h3 style="margin-top:24px;">Daftar Produk</h3>
     <input class="pk-search-box" placeholder="Cari produk..." oninput="pkFilterProduk(this.value)">
     <table class="pk-table" id="pkProdukTable"></table>
   `;
@@ -536,6 +552,8 @@ function pkLoadEditProduk(id){
   }
   
   document.querySelector('#pkProdukBody h3').innerText = 'Edit Produk';
+  document.getElementById('pkPrBtnSimpan').innerText = 'Simpan Perubahan';
+  document.getElementById('pkPrBtnBatal').classList.remove('pk-hidden');
   window.scrollTo(0,0);
 }
 function pkDelProduk(id){
@@ -591,7 +609,7 @@ function pkRenderTransaksi(){
 }
 function pkTrSearchProduk(q){
   q=q.toLowerCase();
-  const list = DB.produk.filter(p=>p.status==='aktif' && (p.nama.toLowerCase().includes(q)||p.kode.toLowerCase().includes(q)));
+  const list = DB.produk.filter(p=>p.status!=='nonaktif' && (p.nama.toLowerCase().includes(q)||p.kode.toLowerCase().includes(q)));
   document.getElementById('pkTrProdukList').innerHTML = list.map(p=>{
     let st = p.has_varian ? (p.varian||[]).reduce((a,v)=>a+v.stok,0) : p.stok;
     return `
@@ -789,7 +807,10 @@ function pkView_pelanggan(){
         <select id="pkPlTipe"><option value="umum">Umum</option><option value="member">Member</option></select>
       </div>
     </div>
-    <button class="pk-btn" onclick="pkAddPelanggan()">Simpan Pelanggan</button>
+    <div style="display:flex;gap:12px;margin-top:12px;">
+      <button class="pk-btn" id="pkPlBtnSimpan" onclick="pkAddPelanggan()">Simpan Pelanggan</button>
+      <button class="pk-btn pk-btn-sec pk-hidden" id="pkPlBtnBatal" onclick="pkView_pelanggan()">Batal</button>
+    </div>
     <h3 style="margin-top:24px;">Daftar Pelanggan</h3>
     <table class="pk-table" style="margin-top:16px;">
       <tr><th>Nama</th><th>No HP</th><th>Tipe</th><th>Poin</th><th>Aksi</th></tr>
@@ -826,6 +847,8 @@ function pkLoadEditPelanggan(id){
   document.getElementById('pkPlHp').value = c.no_hp;
   document.getElementById('pkPlTipe').value = c.tipe;
   document.getElementById('pkPlTitle').innerText = 'Edit Pelanggan';
+  document.getElementById('pkPlBtnSimpan').innerText = 'Simpan Perubahan';
+  document.getElementById('pkPlBtnBatal').classList.remove('pk-hidden');
   window.scrollTo(0,0);
 }
 function pkDelPelanggan(id){
@@ -847,7 +870,10 @@ function pkView_supplier(){
       <div class="pk-field"><label>Kontak</label><input id="pkSpKontak"></div>
       <div class="pk-field"><label>No HP</label><input id="pkSpHp"></div>
     </div>
-    <button class="pk-btn" onclick="pkAddSupplier()">Simpan Supplier</button>
+    <div style="display:flex;gap:12px;margin-top:12px;">
+      <button class="pk-btn" id="pkSpBtnSimpan" onclick="pkAddSupplier()">Simpan Supplier</button>
+      <button class="pk-btn pk-btn-sec pk-hidden" id="pkSpBtnBatal" onclick="pkView_supplier()">Batal</button>
+    </div>
     <h3 style="margin-top:24px;">Daftar Supplier</h3>
     <table class="pk-table" style="margin-top:16px;">
       <tr><th>Nama</th><th>Kontak</th><th>No HP</th><th>Aksi</th></tr>
@@ -884,6 +910,8 @@ function pkLoadEditSupplier(id){
   document.getElementById('pkSpKontak').value = s.kontak;
   document.getElementById('pkSpHp').value = s.no_hp;
   document.getElementById('pkSpTitle').innerText = 'Edit Supplier';
+  document.getElementById('pkSpBtnSimpan').innerText = 'Simpan Perubahan';
+  document.getElementById('pkSpBtnBatal').classList.remove('pk-hidden');
   window.scrollTo(0,0);
 }
 function pkDelSupplier(id){
@@ -902,7 +930,7 @@ function pkView_pembelian(){
 }
 function pkRenderPembelian(){
   const supOpts = DB.supplier.map(s=>`<option value="${s.id}">${s.nama}</option>`).join('');
-  const prodOpts = DB.produk.filter(p=>p.status==='aktif').map(p=>`<option value="${p.id}">${p.nama}</option>`).join('');
+  const prodOpts = DB.produk.filter(p=>p.status!=='nonaktif').map(p=>`<option value="${p.id}">${p.nama}</option>`).join('');
   document.getElementById('pkMain').innerHTML = `
     <h2>Pembelian ke Supplier</h2>
     <div class="pk-flex">
@@ -1218,6 +1246,12 @@ function pkImportData(){
     try{
       const parsed = JSON.parse(e.target.result);
       if(!parsed.produk || !parsed.pengaturan){ throw new Error('Format file tidak sesuai'); }
+      const defaultKeys = ['users', 'karyawan', 'kategori', 'produk', 'pelanggan', 'supplier', 'transaksi', 'transaksiDetail', 'pembelian', 'pembelianDetail', 'hutang', 'piutang', 'bayarHutang', 'bayarPiutang', 'poinLog', 'stokLog', 'pengaturan'];
+      defaultKeys.forEach(k => {
+        if(!parsed[k]) parsed[k] = (k === 'pengaturan') ? {} : [];
+      });
+      if(!parsed.meta) parsed.meta = {nextId:{}};
+      if(!parsed.meta.nextId) parsed.meta.nextId = {};
       DB = parsed;
       pkSave();
       alert('Restore berhasil!');
