@@ -1478,24 +1478,37 @@ function pkTrSearchProduk(q){
       const maxPts = Math.max(...p.varian.map(v=>v.poin||0));
       const minPts = Math.min(...p.varian.map(v=>v.poin||0));
       if(maxPts > 0){
-        pointBadge = `<span class="pk-badge" style="font-size:9px;padding:2px 5px;text-transform:none;letter-spacing:0;background:#eff6ff;color:#2563eb;border:1px solid #dbeafe;">+${minPts === maxPts ? maxPts : `${minPts}-${maxPts}`} Pts</span>`;
+        pointBadge = `<span class="pk-badge" style="font-size:9px;padding:2px 6px;text-transform:none;letter-spacing:0;background:#eff6ff;color:#2563eb;border:1px solid #dbeafe;border-radius:6px;font-weight:700;">+${minPts === maxPts ? maxPts : `${minPts}-${maxPts}`} Pts</span>`;
       }
     } else if(p.poin > 0) {
-      pointBadge = `<span class="pk-badge" style="font-size:9px;padding:2px 5px;text-transform:none;letter-spacing:0;background:#eff6ff;color:#2563eb;border:1px solid #dbeafe;">+${p.poin} Pts</span>`;
+      pointBadge = `<span class="pk-badge" style="font-size:9px;padding:2px 6px;text-transform:none;letter-spacing:0;background:#eff6ff;color:#2563eb;border:1px solid #dbeafe;border-radius:6px;font-weight:700;">+${p.poin} Pts</span>`;
     }
 
     return `
-    <div onclick="pkShowVarianModal(${p.id})" class="pk-product-touch-card" style="background:#ffffff;border:1px solid var(--border);border-radius:var(--radius-md);padding:12px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:var(--shadow-sm);cursor:pointer;transition:all 0.2s;position:relative;height:120px;text-align:left;">
-      <div>
-        <div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;letter-spacing:0.5px;">${katNama}</div>
-        <div style="font-weight:700;font-size:13px;color:var(--text-main);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${p.nama}</div>
+    <div onclick="pkShowVarianModal(${p.id})" class="pk-product-touch-card" style="background:#ffffff;border:1px solid var(--border);border-radius:12px;padding:12px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:var(--shadow-sm);cursor:pointer;transition:all 0.2s;position:relative;height:130px;text-align:left;">
+      <!-- Row 1: Category & Stock -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <span style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70px;">
+          ${katNama}
+        </span>
+        <span class="${isLow ? 'pk-badge pk-badge-red' : 'pk-badge pk-badge-green'}" style="font-size:9px;padding:2px 6px;text-transform:none;letter-spacing:0;border-radius:6px;font-weight:700;">
+          Stok: ${st}
+        </span>
       </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
-        <span style="font-weight:800;color:var(--primary);font-size:14px;font-family:var(--font-title);">${pkFmt(p.harga_jual)}</span>
-        <div style="display:flex;gap:4px;align-items:center;">
-          ${pointBadge}
-          <span class="${isLow ? 'pk-badge pk-badge-red' : 'pk-badge pk-badge-green'}" style="font-size:9px;padding:2px 5px;text-transform:none;letter-spacing:0;">Stok: ${st}</span>
+
+      <!-- Row 2: Product Name -->
+      <div style="flex:1;display:flex;align-items:center;margin-bottom:8px;">
+        <div style="font-weight:700;font-size:13px;color:var(--text-main);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
+          ${p.nama}
         </div>
+      </div>
+
+      <!-- Row 3: Price & Point -->
+      <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px dashed #f1f5f9;padding-top:8px;">
+        <span style="font-weight:800;color:var(--primary);font-size:14px;font-family:var(--font-title);white-space:nowrap;">
+          ${pkFmt(p.harga_jual)}
+        </span>
+        ${pointBadge ? pointBadge : '<span style="height:17px;"></span>'}
       </div>
     </div>
     `;
