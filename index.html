@@ -595,8 +595,10 @@
 ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
 /* Receipt Print */
-#pk-receipt { font-family: monospace; font-size: 11px; width: 280px; margin: 0 auto; padding: 10px; color: #000; background: #fff; }
+:root { --receipt-width: 280px; }
+#pk-receipt { font-family: monospace; font-size: 11px; width: var(--receipt-width); margin: 0 auto; padding: 10px; color: #000; background: #fff; }
 @media print {
+  @page { size: var(--receipt-width) auto; margin: 0; }
   body > *:not(#pk-receipt) {
     display: none !important;
   }
@@ -605,7 +607,7 @@
     position: absolute !important;
     left: 0 !important;
     top: 0 !important;
-    width: 280px !important;
+    width: var(--receipt-width) !important;
     margin: 0 !important;
     padding: 0 !important;
     background: #fff !important;
@@ -729,7 +731,7 @@ function pkSeed(){
     pengaturan:{
       nama_toko:'Toko Bangunan Jaya', alamat:'Jl. Contoh No. 1', no_telp:'0800-000-000',
       email:'', npwp:'', pajak_persen:0, mata_uang:'Rp', footer_struk:'Terima kasih telah berbelanja',
-      poin_per_rupiah:10000, rupiah_per_poin:100, min_tukar_poin:10
+      poin_per_rupiah:10000, rupiah_per_poin:100, min_tukar_poin:10, ukuran_printer:'80mm'
     }
   };
   DB.meta.nextId = {users:2, karyawan:2, kategori:3, produk:3, pelanggan:1, supplier:1,
@@ -780,6 +782,7 @@ let pkCart = [];
 /* ---------- BOOT ---------- */
 function pkBoot(){
   pkLoad();
+  pkApplyPrinterSize();
   const session = pkGetSession();
   if(!session){
     document.getElementById('pkLoginScreen').classList.remove('pk-hidden');
@@ -1887,14 +1890,16 @@ function pkCetakStruk(trId){
     modal.style = "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.6);backdrop-filter:blur(6px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;";
     document.body.appendChild(modal);
   }
+  const receiptW = (DB.pengaturan.ukuran_printer === '58mm') ? '200px' : '280px';
   modal.innerHTML = `
-    <div style="background:#ffffff;border-radius:16px;box-shadow:var(--shadow-xl);width:100%;max-width:340px;display:flex;flex-direction:column;max-height:90vh;overflow:hidden;border:1px solid var(--border);">
+    <div style="background:#ffffff;border-radius:16px;box-shadow:var(--shadow-xl);width:100%;max-width:${(DB.pengaturan.ukuran_printer === '58mm') ? '280px' : '360px'};display:flex;flex-direction:column;max-height:90vh;overflow:hidden;border:1px solid var(--border);">
       <div style="padding:16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:#f8fafc;">
-        <span style="font-weight:700;font-family:var(--font-title);color:var(--text-main);font-size:15px;display:flex;align-items:center;gap:6px;"><i data-lucide="receipt" style="width:18px;height:18px;color:var(--primary);"></i> Struk Transaksi</span>
+        <span style="font-weight:700;font-family:var(--font-title);color:var(--text-main);font-size:15px;display:flex;align-items:center;gap:6px;"><i data-lucide="receipt" style="width:18px;height:18px;color:var(--primary);"></i> Struk Transaksi
+        <span style="font-size:11px;font-weight:500;background:rgba(var(--primary-rgb),0.1);color:var(--primary);padding:2px 8px;border-radius:20px;margin-left:4px;">${DB.pengaturan.ukuran_printer||'80mm'}</span></span>
         <button onclick="document.getElementById('pkReceiptModal').style.display='none'" style="border:none;background:transparent;cursor:pointer;color:var(--text-muted);display:flex;align-items:center;"><i data-lucide="x" style="width:20px;height:20px;"></i></button>
       </div>
       <div style="flex:1;overflow-y:auto;padding:20px;background:#f1f5f9;display:flex;justify-content:center;">
-        <div style="background:#ffffff;box-shadow:var(--shadow-sm);border:1px solid var(--border);padding:20px;width:280px;height:fit-content;font-family:monospace;font-size:12px;color:#000;line-height:1.5;text-align:left;">
+        <div style="background:#ffffff;box-shadow:var(--shadow-sm);border:1px solid var(--border);padding:16px;width:${receiptW};height:fit-content;font-family:monospace;font-size:12px;color:#000;line-height:1.5;text-align:left;">
           ${html}
         </div>
       </div>
@@ -1989,14 +1994,16 @@ function pkCetakPembelian(pbId){
     modal.style = "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.6);backdrop-filter:blur(6px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;";
     document.body.appendChild(modal);
   }
+  const receiptW2 = (DB.pengaturan.ukuran_printer === '58mm') ? '200px' : '280px';
   modal.innerHTML = `
-    <div style="background:#ffffff;border-radius:16px;box-shadow:var(--shadow-xl);width:100%;max-width:340px;display:flex;flex-direction:column;max-height:90vh;overflow:hidden;border:1px solid var(--border);">
+    <div style="background:#ffffff;border-radius:16px;box-shadow:var(--shadow-xl);width:100%;max-width:${(DB.pengaturan.ukuran_printer === '58mm') ? '280px' : '360px'};display:flex;flex-direction:column;max-height:90vh;overflow:hidden;border:1px solid var(--border);">
       <div style="padding:16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:#f8fafc;">
-        <span style="font-weight:700;font-family:var(--font-title);color:var(--text-main);font-size:15px;display:flex;align-items:center;gap:6px;"><i data-lucide="receipt" style="width:18px;height:18px;color:var(--primary);"></i> Nota Pembelian</span>
+        <span style="font-weight:700;font-family:var(--font-title);color:var(--text-main);font-size:15px;display:flex;align-items:center;gap:6px;"><i data-lucide="receipt" style="width:18px;height:18px;color:var(--primary);"></i> Nota Pembelian
+        <span style="font-size:11px;font-weight:500;background:rgba(var(--primary-rgb),0.1);color:var(--primary);padding:2px 8px;border-radius:20px;margin-left:4px;">${DB.pengaturan.ukuran_printer||'80mm'}</span></span>
         <button onclick="document.getElementById('pkReceiptModal').style.display='none'" style="border:none;background:transparent;cursor:pointer;color:var(--text-muted);display:flex;align-items:center;"><i data-lucide="x" style="width:20px;height:20px;"></i></button>
       </div>
       <div style="flex:1;overflow-y:auto;padding:20px;background:#f1f5f9;display:flex;justify-content:center;">
-        <div style="background:#ffffff;box-shadow:var(--shadow-sm);border:1px solid var(--border);padding:20px;width:280px;height:fit-content;font-family:monospace;font-size:12px;color:#000;line-height:1.5;text-align:left;">
+        <div style="background:#ffffff;box-shadow:var(--shadow-sm);border:1px solid var(--border);padding:16px;width:${receiptW2};height:fit-content;font-family:monospace;font-size:12px;color:#000;line-height:1.5;text-align:left;">
           ${html}
         </div>
       </div>
@@ -2609,12 +2616,20 @@ function pkRunLaporan(){
 }
 
 /* ================= PENGATURAN TOKO ================= */
+/* Helper: apply printer paper width as CSS variable */
+function pkApplyPrinterSize(){
+  const sz = DB.pengaturan.ukuran_printer || '80mm';
+  const w = sz === '58mm' ? '200px' : '280px';
+  document.documentElement.style.setProperty('--receipt-width', w);
+}
+
 function pkView_pengaturan(){
   const s = DB.pengaturan;
+  const sz = s.ukuran_printer || '80mm';
   document.getElementById('pkMain').innerHTML = `
     <h2>Pengaturan Toko</h2>
-    <div class="pk-card">
-      <h3 style="margin-top:0;font-family:var(--font-title);">Identitas & Pajak Toko</h3>
+    <div class="pk-card" style="margin-bottom:20px;">
+      <h3 style="margin-top:0;font-family:var(--font-title);">Identitas &amp; Pajak Toko</h3>
       <div class="pk-flex">
         <div class="pk-field"><label>Nama Toko</label><input id="pkStNama" value="${s.nama_toko}"></div>
         <div class="pk-field"><label>Alamat</label><input id="pkStAlamat" value="${s.alamat}"></div>
@@ -2626,9 +2641,40 @@ function pkView_pengaturan(){
         <div class="pk-field"><label>Pajak (%)</label><input type="number" id="pkStPajak" value="${s.pajak_persen}"></div>
       </div>
       <div class="pk-field"><label>Footer Struk</label><textarea id="pkStFooter" rows="2">${s.footer_struk}</textarea></div>
-      <button class="pk-btn" onclick="pkSavePengaturan()">Simpan Pengaturan</button>
     </div>
+    <div class="pk-card" style="margin-bottom:20px;">
+      <h3 style="margin-top:0;font-family:var(--font-title);display:flex;align-items:center;gap:8px;">
+        <i data-lucide="printer" style="width:18px;height:18px;color:var(--primary);"></i> Pengaturan Printer
+      </h3>
+      <p style="margin-top:0;margin-bottom:16px;color:var(--text-muted);font-size:13px;">Pilih ukuran kertas thermal printer yang Anda gunakan. Tampilan pratinjau struk dan hasil cetak akan menyesuaikan secara otomatis.</p>
+      <div class="pk-flex" style="align-items:flex-start;gap:16px;">
+        <div class="pk-field" style="flex:0 0 auto;">
+          <label>Ukuran Kertas Struk</label>
+          <select id="pkStPrinterSize" style="padding:10px 14px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-size:14px;cursor:pointer;">
+            <option value="58mm" ${sz==='58mm'?'selected':''}>58mm (Printer Mini)</option>
+            <option value="80mm" ${sz==='80mm'?'selected':''}>80mm (Printer Standar)</option>
+          </select>
+        </div>
+        <div style="flex:1;">
+          <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:8px;font-weight:600;">PRATINJAU LEBAR STRUK</label>
+          <div style="display:flex;gap:20px;align-items:flex-end;">
+            <div style="text-align:center;">
+              <div style="width:58px;height:80px;border:2px solid ${sz==='58mm'?'var(--primary)':'var(--border)'};border-radius:4px;background:${sz==='58mm'?'rgba(var(--primary-rgb),0.06)':'#f8fafc'};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:${sz==='58mm'?'var(--primary)':'var(--text-muted)'};flex-direction:column;gap:2px;"><span style="font-size:15px;">📜</span>58mm</div>
+              <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">&nbsp;≈ 200px&nbsp;</div>
+            </div>
+            <div style="text-align:center;">
+              <div style="width:80px;height:80px;border:2px solid ${sz==='80mm'?'var(--primary)':'var(--border)'};border-radius:4px;background:${sz==='80mm'?'rgba(var(--primary-rgb),0.06)':'#f8fafc'};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:${sz==='80mm'?'var(--primary)':'var(--text-muted)'};flex-direction:column;gap:2px;"><span style="font-size:15px;">🧾</span>80mm</div>
+              <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">&nbsp;≈ 280px&nbsp;</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="pk-btn" onclick="pkSavePengaturan()" style="display:inline-flex;align-items:center;gap:8px;">
+      <i data-lucide="save" style="width:15px;height:15px;"></i> Simpan Pengaturan
+    </button>
   `;
+  if(typeof lucide !== 'undefined') lucide.createIcons();
 }
 function pkSavePengaturan(){
   DB.pengaturan.nama_toko = document.getElementById('pkStNama').value;
@@ -2638,9 +2684,12 @@ function pkSavePengaturan(){
   DB.pengaturan.npwp = document.getElementById('pkStNpwp').value;
   DB.pengaturan.pajak_persen = Number(document.getElementById('pkStPajak').value||0);
   DB.pengaturan.footer_struk = document.getElementById('pkStFooter').value;
+  DB.pengaturan.ukuran_printer = document.getElementById('pkStPrinterSize').value;
   pkSave();
+  pkApplyPrinterSize();
   document.getElementById('pkStoreName').innerText = DB.pengaturan.nama_toko;
-  alert('Pengaturan toko disimpan');
+  alert('Pengaturan toko disimpan!');
+  pkView_pengaturan();
 }
 
 /* ================= BACKUP / RESTORE ================= */
