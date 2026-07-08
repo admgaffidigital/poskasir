@@ -452,7 +452,14 @@
     display: none; /* Hide profile name on mobile header to save space */
   }
   #pkStoreName { font-size: 15px !important; }
-  .pk-content { margin: 8px; padding: 12px; border-radius: var(--radius-sm); }
+  .pk-content {
+    margin: 0;
+    padding: 16px;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+  }
   .pk-content h2 { font-size: 18px; margin-bottom: 12px; }
   
   /* Transform table into a ListView on mobile */
@@ -807,12 +814,15 @@ function pkView_produk(){
 }
 function pkRenderKategoriList(){
   document.getElementById('pkProdukBody').innerHTML = `
-    <div class="pk-flex" style="align-items:flex-end;margin-bottom:16px;">
-      <div class="pk-field" style="margin-bottom:0;flex:1;">
-        <label>Nama Kategori Baru</label>
-        <input id="pkKatNama" placeholder="Contoh: Semen & Mortar">
+    <div class="pk-card" style="margin-bottom:24px;">
+      <h3 style="margin-top:0;font-family:var(--font-title);">Tambah Kategori</h3>
+      <div class="pk-flex" style="align-items:flex-end;">
+        <div class="pk-field" style="margin-bottom:0;flex:1;">
+          <label>Nama Kategori Baru</label>
+          <input id="pkKatNama" placeholder="Contoh: Semen & Mortar">
+        </div>
+        <div style="flex:0 0 auto;"><button class="pk-btn" onclick="pkAddKategori()">Tambah Kategori</button></div>
       </div>
-      <div style="flex:0 0 auto;"><button class="pk-btn" onclick="pkAddKategori()">Tambah Kategori</button></div>
     </div>
     <table class="pk-table"><tr><th>ID</th><th>Nama Kategori</th><th>Aksi</th></tr>
     ${DB.kategori.map(k=>`<tr><td data-label="ID">${k.id}</td><td data-label="Nama Kategori">${k.nama}</td>
@@ -838,35 +848,37 @@ function pkRenderProdukList(){
   pkEditProdukId = null;
   const opts = DB.kategori.map(k=>`<option value="${k.id}">${k.nama}</option>`).join('');
   document.getElementById('pkProdukBody').innerHTML = `
-    <h3>Tambah Produk</h3>
-    <div class="pk-flex">
-      <div class="pk-field"><label>Kode/SKU</label><input id="pkPrKode" placeholder="Kosongkan u/ Auto"></div>
-      <div class="pk-field"><label>Nama</label><input id="pkPrNama"></div>
-      <div class="pk-field"><label>Kategori</label><select id="pkPrKategori">${opts}</select></div>
-      <div class="pk-field"><label>Satuan</label><input id="pkPrSatuan" placeholder="sak/pcs/kg"></div>
-    </div>
-    <div class="pk-flex">
-      <div class="pk-field"><label>Harga Beli</label><input type="number" id="pkPrHargaBeli"></div>
-      <div class="pk-field"><label>Harga Jual</label><input type="number" id="pkPrHargaJual"></div>
-      <div class="pk-field"><label>Harga Grosir</label><input type="number" id="pkPrHargaGrosir" placeholder="0 = tdk ada"></div>
-      <div class="pk-field"><label>Min. Qty Grosir</label><input type="number" step="0.01" id="pkPrMinGrosir" placeholder="0"></div>
-    </div>
-    <div class="pk-flex" style="align-items:center;margin-bottom:12px;">
-      <input type="checkbox" id="pkPrHasVarian" onchange="pkToggleVarian(this.checked)" style="margin-right:8px;transform:scale(1.2);">
-      <label for="pkPrHasVarian" style="font-weight:600;margin:0;">Produk ini memiliki Varian (Warna/Ukuran dll)</label>
-    </div>
-    <div id="pkPrStokBox" class="pk-flex">
-      <div class="pk-field"><label>Stok Awal</label><input type="number" step="0.01" id="pkPrStok" value="0"></div>
-      <div class="pk-field"><label>Stok Minimum</label><input type="number" step="0.01" id="pkPrStokMin" value="5"></div>
-    </div>
-    <div id="pkPrVarianBox" class="pk-hidden" style="background:#f9fafb;padding:12px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:16px;">
-      <p style="margin:0 0 8px;font-weight:600;">Daftar Varian</p>
-      <div id="pkVarianList"></div>
-      <button class="pk-btn pk-btn-sm" onclick="pkAddVarianRow()">+ Tambah Varian</button>
-    </div>
-    <div style="display:flex;gap:12px;margin-top:12px;">
-      <button class="pk-btn" id="pkPrBtnSimpan" onclick="pkAddProduk()">Simpan Produk</button>
-      <button class="pk-btn pk-btn-sec pk-hidden" id="pkPrBtnBatal" onclick="pkRenderProdukList()">Batal</button>
+    <div class="pk-card" style="margin-bottom:24px;">
+      <h3 style="margin-top:0;font-family:var(--font-title);" id="pkPrTitle">Tambah Produk</h3>
+      <div class="pk-flex">
+        <div class="pk-field"><label>Kode/SKU</label><input id="pkPrKode" placeholder="Kosongkan u/ Auto"></div>
+        <div class="pk-field"><label>Nama</label><input id="pkPrNama"></div>
+        <div class="pk-field"><label>Kategori</label><select id="pkPrKategori">${opts}</select></div>
+        <div class="pk-field"><label>Satuan</label><input id="pkPrSatuan" placeholder="sak/pcs/kg"></div>
+      </div>
+      <div class="pk-flex">
+        <div class="pk-field"><label>Harga Beli</label><input type="number" id="pkPrHargaBeli"></div>
+        <div class="pk-field"><label>Harga Jual</label><input type="number" id="pkPrHargaJual"></div>
+        <div class="pk-field"><label>Harga Grosir</label><input type="number" id="pkPrHargaGrosir" placeholder="0 = tdk ada"></div>
+        <div class="pk-field"><label>Min. Qty Grosir</label><input type="number" step="0.01" id="pkPrMinGrosir" placeholder="0"></div>
+      </div>
+      <div class="pk-flex" style="align-items:center;margin-bottom:12px;">
+        <input type="checkbox" id="pkPrHasVarian" onchange="pkToggleVarian(this.checked)" style="margin-right:8px;transform:scale(1.2);width:auto;">
+        <label for="pkPrHasVarian" style="font-weight:600;margin:0;">Produk ini memiliki Varian (Warna/Ukuran dll)</label>
+      </div>
+      <div id="pkPrStokBox" class="pk-flex">
+        <div class="pk-field"><label>Stok Awal</label><input type="number" step="0.01" id="pkPrStok" value="0"></div>
+        <div class="pk-field"><label>Stok Minimum</label><input type="number" step="0.01" id="pkPrStokMin" value="5"></div>
+      </div>
+      <div id="pkPrVarianBox" class="pk-hidden" style="background:#f9fafb;padding:12px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:16px;">
+        <p style="margin:0 0 8px;font-weight:600;">Daftar Varian</p>
+        <div id="pkVarianList"></div>
+        <button class="pk-btn pk-btn-sm" onclick="pkAddVarianRow()">+ Tambah Varian</button>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:12px;">
+        <button class="pk-btn" id="pkPrBtnSimpan" onclick="pkAddProduk()">Simpan Produk</button>
+        <button class="pk-btn pk-btn-sec pk-hidden" id="pkPrBtnBatal" onclick="pkRenderProdukList()">Batal</button>
+      </div>
     </div>
     <h3 style="margin-top:24px;">Daftar Produk</h3>
     <input class="pk-search-box" placeholder="Cari produk..." oninput="pkFilterProduk(this.value)">
@@ -1299,17 +1311,19 @@ let pkEditPelangganId = null;
 function pkView_pelanggan(){
   pkEditPelangganId = null;
   document.getElementById('pkMain').innerHTML = `
-    <h2 id="pkPlTitle">Tambah Pelanggan</h2>
-    <div class="pk-flex">
-      <div class="pk-field"><label>Nama</label><input id="pkPlNama"></div>
-      <div class="pk-field"><label>No HP</label><input id="pkPlHp"></div>
-      <div class="pk-field"><label>Tipe</label>
-        <select id="pkPlTipe"><option value="umum">Umum</option><option value="member">Member</option></select>
+    <div class="pk-card" style="margin-bottom:24px;">
+      <h3 style="margin-top:0;font-family:var(--font-title);" id="pkPlTitle">Tambah Pelanggan</h3>
+      <div class="pk-flex">
+        <div class="pk-field"><label>Nama</label><input id="pkPlNama"></div>
+        <div class="pk-field"><label>No HP</label><input id="pkPlHp"></div>
+        <div class="pk-field"><label>Tipe</label>
+          <select id="pkPlTipe"><option value="umum">Umum</option><option value="member">Member</option></select>
+        </div>
       </div>
-    </div>
-    <div style="display:flex;gap:12px;margin-top:12px;">
-      <button class="pk-btn" id="pkPlBtnSimpan" onclick="pkAddPelanggan()">Simpan Pelanggan</button>
-      <button class="pk-btn pk-btn-sec pk-hidden" id="pkPlBtnBatal" onclick="pkView_pelanggan()">Batal</button>
+      <div style="display:flex;gap:12px;margin-top:12px;">
+        <button class="pk-btn" id="pkPlBtnSimpan" onclick="pkAddPelanggan()">Simpan Pelanggan</button>
+        <button class="pk-btn pk-btn-sec pk-hidden" id="pkPlBtnBatal" onclick="pkView_pelanggan()">Batal</button>
+      </div>
     </div>
     <h3 style="margin-top:24px;">Daftar Pelanggan</h3>
     <table class="pk-table" style="margin-top:16px;">
@@ -1369,15 +1383,17 @@ let pkEditSupplierId = null;
 function pkView_supplier(){
   pkEditSupplierId = null;
   document.getElementById('pkMain').innerHTML = `
-    <h2 id="pkSpTitle">Tambah Supplier</h2>
-    <div class="pk-flex">
-      <div class="pk-field"><label>Nama Supplier</label><input id="pkSpNama"></div>
-      <div class="pk-field"><label>Kontak</label><input id="pkSpKontak"></div>
-      <div class="pk-field"><label>No HP</label><input id="pkSpHp"></div>
-    </div>
-    <div style="display:flex;gap:12px;margin-top:12px;">
-      <button class="pk-btn" id="pkSpBtnSimpan" onclick="pkAddSupplier()">Simpan Supplier</button>
-      <button class="pk-btn pk-btn-sec pk-hidden" id="pkSpBtnBatal" onclick="pkView_supplier()">Batal</button>
+    <div class="pk-card" style="margin-bottom:24px;">
+      <h3 style="margin-top:0;font-family:var(--font-title);" id="pkSpTitle">Tambah Supplier</h3>
+      <div class="pk-flex">
+        <div class="pk-field"><label>Nama Supplier</label><input id="pkSpNama"></div>
+        <div class="pk-field"><label>Kontak</label><input id="pkSpKontak"></div>
+        <div class="pk-field"><label>No HP</label><input id="pkSpHp"></div>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:12px;">
+        <button class="pk-btn" id="pkSpBtnSimpan" onclick="pkAddSupplier()">Simpan Supplier</button>
+        <button class="pk-btn pk-btn-sec pk-hidden" id="pkSpBtnBatal" onclick="pkView_supplier()">Batal</button>
+      </div>
     </div>
     <h3 style="margin-top:24px;">Daftar Supplier</h3>
     <table class="pk-table" style="margin-top:16px;">
@@ -1442,23 +1458,27 @@ function pkRenderPembelian(){
   const prodOpts = DB.produk.filter(p=>p.status!=='nonaktif').map(p=>`<option value="${p.id}">${p.nama}</option>`).join('');
   document.getElementById('pkMain').innerHTML = `
     <h2>Pembelian ke Supplier</h2>
-    <div class="pk-flex">
-      <div class="pk-field"><label>Supplier</label><select id="pkPbSupplier">${supOpts}</select></div>
-      <div class="pk-field"><label>Jatuh Tempo</label><input type="date" id="pkPbJatuhTempo"></div>
-      <div class="pk-field"><label>Status Bayar</label>
-        <select id="pkPbStatusBayar"><option value="lunas">Lunas</option><option value="hutang">Belum Lunas (Hutang)</option></select>
+    <div class="pk-card" style="margin-bottom:24px;">
+      <h3 style="margin-top:0;font-family:var(--font-title);">Transaksi Baru</h3>
+      <div class="pk-flex">
+        <div class="pk-field"><label>Supplier</label><select id="pkPbSupplier">${supOpts}</select></div>
+        <div class="pk-field"><label>Jatuh Tempo</label><input type="date" id="pkPbJatuhTempo"></div>
+        <div class="pk-field"><label>Status Bayar</label>
+          <select id="pkPbStatusBayar"><option value="lunas">Lunas</option><option value="hutang">Belum Lunas (Hutang)</option></select>
+        </div>
       </div>
-    </div>
-    <div class="pk-flex" style="align-items:flex-end;">
-      <div class="pk-field" style="flex:2;"><label>Produk</label>
-        <select id="pkPbProduk" onchange="pkPbCheckVarian()"><option value="">-- Pilih Produk --</option>${prodOpts}</select>
+      <h4 style="margin:16px 0 8px;font-size:14px;color:var(--text-main);font-weight:700;">Tambah Barang</h4>
+      <div class="pk-flex" style="align-items:flex-end;">
+        <div class="pk-field" style="flex:2;"><label>Produk</label>
+          <select id="pkPbProduk" onchange="pkPbCheckVarian()"><option value="">-- Pilih Produk --</option>${prodOpts}</select>
+        </div>
+        <div class="pk-field pk-hidden" id="pkPbVarianBox" style="flex:1;"><label>Varian</label>
+          <select id="pkPbVarian"></select>
+        </div>
+        <div class="pk-field" style="flex:1;"><label>Qty</label><input type="number" step="0.01" id="pkPbQty" value="1"></div>
+        <div class="pk-field" style="flex:1.5;"><label>Hrg Beli Satuan</label><input type="number" id="pkPbHarga"></div>
+        <div style="flex:0 0 auto;"><button class="pk-btn" onclick="pkAddPembelianItem()">+ Tambah</button></div>
       </div>
-      <div class="pk-field pk-hidden" id="pkPbVarianBox" style="flex:1;"><label>Varian</label>
-        <select id="pkPbVarian"></select>
-      </div>
-      <div class="pk-field" style="flex:1;"><label>Qty</label><input type="number" step="0.01" id="pkPbQty" value="1"></div>
-      <div class="pk-field" style="flex:1.5;"><label>Hrg Beli Satuan</label><input type="number" id="pkPbHarga"></div>
-      <div class="pk-field"><button class="pk-btn" onclick="pkAddPembelianItem()">+ Tambah</button></div>
     </div>
     <table class="pk-table"><tr><th>Produk</th><th>Qty</th><th>Harga</th><th>Subtotal</th></tr>
       ${pkPembelianCart.map(i=>`<tr><td data-label="Produk">${i.nama} ${i.varian?`<small>(${i.varian})</small>`:''}</td><td data-label="Qty">${i.qty}</td><td data-label="Harga">${pkFmt(i.harga)}</td><td data-label="Subtotal">${pkFmt(i.qty*i.harga)}</td></tr>`).join('')}
@@ -1651,16 +1671,18 @@ let pkEditKaryawanId = null;
 function pkView_karyawan(){
   pkEditKaryawanId = null;
   document.getElementById('pkMain').innerHTML = `
-    <h2 id="pkKyTitle">Tambah Karyawan</h2>
-    <div class="pk-flex">
-      <div class="pk-field"><label>Nama</label><input id="pkKyNama"></div>
-      <div class="pk-field"><label>Jabatan</label><input id="pkKyJabatan"></div>
-      <div class="pk-field"><label>No HP</label><input id="pkKyHp"></div>
-      <div class="pk-field"><label>Gaji Pokok</label><input type="number" id="pkKyGaji"></div>
-    </div>
-    <div style="display:flex;gap:12px;margin-top:12px;">
-      <button class="pk-btn" id="pkKyBtnSimpan" onclick="pkAddKaryawan()">Simpan Karyawan</button>
-      <button class="pk-btn pk-btn-sec pk-hidden" id="pkKyBtnBatal" onclick="pkView_karyawan()">Batal</button>
+    <div class="pk-card" style="margin-bottom:24px;">
+      <h3 style="margin-top:0;font-family:var(--font-title);" id="pkKyTitle">Tambah Karyawan</h3>
+      <div class="pk-flex">
+        <div class="pk-field"><label>Nama</label><input id="pkKyNama"></div>
+        <div class="pk-field"><label>Jabatan</label><input id="pkKyJabatan"></div>
+        <div class="pk-field"><label>No HP</label><input id="pkKyHp"></div>
+        <div class="pk-field"><label>Gaji Pokok</label><input type="number" id="pkKyGaji"></div>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:12px;">
+        <button class="pk-btn" id="pkKyBtnSimpan" onclick="pkAddKaryawan()">Simpan Karyawan</button>
+        <button class="pk-btn pk-btn-sec pk-hidden" id="pkKyBtnBatal" onclick="pkView_karyawan()">Batal</button>
+      </div>
     </div>
     <h3 style="margin-top:24px;">Daftar Karyawan</h3>
     <table class="pk-table" style="margin-top:16px;">
