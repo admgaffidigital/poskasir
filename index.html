@@ -653,21 +653,23 @@ function pkAddToCart(id, varian=''){
   }
   pkRenderCart();
 }
-function pkSetQty(id, varian, val){
-  const item = pkCart.find(c=>c.produk_id===id && c.varian===varian);
-  const p = DB.produk.find(x=>x.id===id);
-  if(!item || !p) return;
+function pkSetQtyByIndex(index, val){
+  const item = pkCart[index];
+  if(!item) return;
+  const p = DB.produk.find(x=>x.id===item.produk_id);
+  if(!p) return;
   let qty = Number(val);
-  if(isNaN(qty) || qty <= 0){ pkCart = pkCart.filter(c=>!(c.produk_id===id && c.varian===varian)); }
-  else {
-    const stok = (p.has_varian && varian) ? p.varian.find(v=>v.nama===varian).stok : p.stok;
+  if(isNaN(qty) || qty <= 0){
+    pkCart.splice(index, 1);
+  } else {
+    const stok = (p.has_varian && item.varian) ? p.varian.find(v=>v.nama===item.varian).stok : p.stok;
     if(qty > stok) qty = stok;
     item.qty = qty;
   }
   pkRenderCart();
 }
-function pkSetHarga(id, varian, val){
-  const item = pkCart.find(c=>c.produk_id===id && c.varian===varian);
+function pkSetHargaByIndex(index, val){
+  const item = pkCart[index];
   if(!item) return;
   let baru = Number(val);
   if(isNaN(baru)) baru = item.hrg_jual_asli;
@@ -697,9 +699,9 @@ function pkRenderCart(){
     <div class="pk-cart-row" style="flex-wrap:wrap;">
       <div style="flex:1;min-width:120px;">${c.nama} ${c.varian ? `<br><small style="color:#047857">${c.varian}</small>` : ''}</div>
       <div style="display:flex;gap:6px;align-items:center;">
-        <input type="number" step="0.01" style="width:60px;padding:6px;border:1px solid #ccc;border-radius:4px;" value="${c.qty}" onchange="pkSetQty(${c.produk_id}, '${c.varian||''}', this.value)" title="Qty">
+        <input type="number" step="0.01" style="width:60px;padding:6px;border:1px solid #ccc;border-radius:4px;" value="${c.qty}" onchange="pkSetQtyByIndex(${i}, this.value)" title="Qty">
         <span style="color:#888;">x</span>
-        <input type="number" style="width:90px;padding:6px;border:1px solid #ccc;border-radius:4px;" value="${c.harga}" onchange="pkSetHarga(${c.produk_id}, '${c.varian||''}', this.value)" title="Harga Satuan">
+        <input type="number" style="width:90px;padding:6px;border:1px solid #ccc;border-radius:4px;" value="${c.harga}" onchange="pkSetHargaByIndex(${i}, this.value)" title="Harga Satuan">
       </div>
       <div style="text-align:right;width:80px;font-weight:600;">${pkFmt(c.harga*c.qty)}</div>
     </div>
@@ -737,9 +739,9 @@ function pkCheckout(){
     const p = DB.produk.find(x=>x.id===c.produk_id);
     if(p.has_varian && c.varian){
       const v = p.varian.find(x=>x.nama===c.varian);
-      if(v) v.stok -= c.qty;
+      if(v) v.stok = Number((v.stok - c.qty).toFixed(4));
     } else {
-      p.stok -= c.qty;
+      p.stok = Number((p.stok - c.qty).toFixed(4));
     }
     DB.stokLog.push({id:pkNextId('stokLog'), produk_id:c.produk_id, varian:c.varian, jenis:'keluar', qty:c.qty, referensi:noTrans, tanggal:now, keterangan:'Penjualan'});
   });
@@ -982,9 +984,12 @@ function pkSimpanPembelian(){
     const p = DB.produk.find(x=>x.id===i.produk_id);
     if(p.has_varian && i.varian){
       const v = p.varian.find(x=>x.nama===i.varian);
-      if(v){ v.stok += i.qty; v.harga_beli = i.harga; }
+      if(v){
+        v.stok = Number((v.stok + i.qty).toFixed(4));
+        v.harga_beli = i.harga;
+      }
     } else {
-      p.stok += i.qty;
+      p.stok = Number((p.stok + i.qty).toFixed(4));
       p.harga_beli = i.harga;
     }
     DB.stokLog.push({id:pkNextId('stokLog'), produk_id:i.produk_id, varian:i.varian, jenis:'masuk', qty:i.qty, referensi:noPb, tanggal:now, keterangan:'Pembelian'});
