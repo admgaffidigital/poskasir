@@ -1960,22 +1960,45 @@ function pkDelSupplier(id){
 
 /* ================= PEMBELIAN ================= */
 let pkPembelianCart = [];
+let pkPembelianState = {
+  supplier_id: '',
+  jatuh_tempo: '',
+  status_bayar: 'lunas'
+};
+
 function pkView_pembelian(){
   pkPembelianCart = [];
+  pkPembelianState = {
+    supplier_id: '',
+    jatuh_tempo: '',
+    status_bayar: 'lunas'
+  };
   pkRenderPembelian();
 }
 function pkRenderPembelian(){
-  const supOpts = DB.supplier.map(s=>`<option value="${s.id}">${s.nama}</option>`).join('');
+  // Preserve current form values into the state if fields exist in DOM
+  const curSup = document.getElementById('pkPbSupplier');
+  const curJt = document.getElementById('pkPbJatuhTempo');
+  const curSb = document.getElementById('pkPbStatusBayar');
+  if(curSup) pkPembelianState.supplier_id = curSup.value ? Number(curSup.value) : '';
+  if(curJt) pkPembelianState.jatuh_tempo = curJt.value;
+  if(curSb) pkPembelianState.status_bayar = curSb.value;
+
+  const supOpts = DB.supplier.map(s=>`<option value="${s.id}" ${pkPembelianState.supplier_id===s.id?'selected':''}>${s.nama}</option>`).join('');
   const prodOpts = DB.produk.filter(p=>p.status!=='nonaktif').map(p=>`<option value="${p.id}">${p.nama}</option>`).join('');
+  
   document.getElementById('pkMain').innerHTML = `
     <h2>Pembelian ke Supplier</h2>
     <div class="pk-card" style="margin-bottom:24px;">
       <h3 style="margin-top:0;font-family:var(--font-title);">Transaksi Baru</h3>
       <div class="pk-flex">
         <div class="pk-field"><label>Supplier</label><select id="pkPbSupplier">${supOpts}</select></div>
-        <div class="pk-field"><label>Jatuh Tempo</label><input type="date" id="pkPbJatuhTempo"></div>
+        <div class="pk-field"><label>Jatuh Tempo</label><input type="date" id="pkPbJatuhTempo" value="${pkPembelianState.jatuh_tempo}"></div>
         <div class="pk-field"><label>Status Bayar</label>
-          <select id="pkPbStatusBayar"><option value="lunas">Lunas</option><option value="hutang">Belum Lunas (Hutang)</option></select>
+          <select id="pkPbStatusBayar">
+            <option value="lunas" ${pkPembelianState.status_bayar==='lunas'?'selected':''}>Lunas</option>
+            <option value="hutang" ${pkPembelianState.status_bayar==='hutang'?'selected':''}>Belum Lunas (Hutang / Tempo)</option>
+          </select>
         </div>
       </div>
       <h4 style="margin:16px 0 8px;font-size:14px;color:var(--text-main);font-weight:700;">Tambah Barang</h4>
@@ -2041,6 +2064,12 @@ function pkSimpanPembelian(){
   const supplierId = Number(document.getElementById('pkPbSupplier').value);
   const jatuhTempo = document.getElementById('pkPbJatuhTempo').value;
   const statusBayar = document.getElementById('pkPbStatusBayar').value;
+  
+  if(statusBayar === 'hutang' && !jatuhTempo){
+    alert('Tanggal Jatuh Tempo wajib diisi jika pembelian berstatus Tempo/Hutang!');
+    return;
+  }
+
   const total = pkPembelianCart.reduce((a,i)=>a+i.qty*i.harga,0);
   const now = new Date().toISOString();
   const pbId = pkNextId('pembelian');
@@ -2067,6 +2096,11 @@ function pkSimpanPembelian(){
   }
   pkSave();
   pkPembelianCart = [];
+  pkPembelianState = {
+    supplier_id: '',
+    jatuh_tempo: '',
+    status_bayar: 'lunas'
+  };
   pkRenderPembelian();
 }
 
