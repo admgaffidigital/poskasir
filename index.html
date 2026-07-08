@@ -6,116 +6,465 @@
 <title>POS KASIR</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9B%92%3C/text%3E%3C/svg%3E">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-.pk-root{font-family:'Inter',sans-serif;font-size:14px;color:#374151;max-width:100%;margin:0 auto;background:#f3f4f6;min-height:100vh;}
-.pk-root *{box-sizing:border-box;}
-.pk-hidden{display:none !important;}
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+  --primary: #0d9488;
+  --primary-hover: #0f766e;
+  --primary-light: #f0fdfa;
+  --success: #10b981;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --bg-main: #f8fafc;
+  --bg-card: #ffffff;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --font-title: 'Outfit', sans-serif;
+  --font-body: 'Plus Jakarta Sans', sans-serif;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+.pk-root {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--text-main);
+  max-width: 100%;
+  margin: 0 auto;
+  background: var(--bg-main);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+.pk-root * { box-sizing: border-box; }
+.pk-hidden { display: none !important; }
 
 /* Login Screen */
-#pkLoginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg, #064e3b 0%, #10b981 100%);padding:20px;}
-.pk-login-wrap{width:100%;max-width:420px;background:#ffffff;padding:48px 40px;border-radius:24px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.4);position:relative;overflow:hidden;}
-.pk-login-wrap::before{content:'';position:absolute;top:0;left:0;right:0;height:6px;background:linear-gradient(90deg, #34d399, #059669);}
-.pk-login-wrap h2{margin-top:0;margin-bottom:30px;text-align:center;color:#064e3b;font-weight:800;font-size:26px;letter-spacing:-0.5px;}
-.pk-field{margin-bottom:16px;}
-.pk-field label{display:block;margin-bottom:6px;font-weight:600;font-size:13px;color:#4b5563;}
-.pk-field input,.pk-field select,.pk-field textarea{width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;transition:border-color 0.2s, box-shadow 0.2s;font-family:inherit;}
-.pk-field input:focus,.pk-field select:focus,.pk-field textarea:focus{outline:none;border-color:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,0.2);}
+#pkLoginScreen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: radial-gradient(circle at top left, #115e59, #0f172a);
+  padding: 24px;
+}
+.pk-login-wrap {
+  width: 100%;
+  max-width: 440px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  padding: 48px 40px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+.pk-login-wrap::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, #2dd4bf, #0d9488);
+}
+.pk-login-wrap h2 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  text-align: center;
+  color: #115e59;
+  font-family: var(--font-title);
+  font-weight: 800;
+  font-size: 28px;
+  letter-spacing: -0.5px;
+}
+.pk-field { margin-bottom: 20px; }
+.pk-field label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  color: #334155;
+}
+.pk-field input, .pk-field select, .pk-field textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  background: #ffffff;
+}
+.pk-field input:focus, .pk-field select:focus, .pk-field textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+  background: #ffffff;
+}
 
 /* Buttons */
-.pk-btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 18px;border:none;border-radius:8px;background:#10b981;color:#fff;cursor:pointer;font-size:14px;font-weight:600;transition:all 0.2s ease;font-family:inherit;}
-.pk-btn:hover{background:#059669;box-shadow:0 4px 12px rgba(16,185,129,0.25);transform:translateY(-1px);}
-.pk-btn:active{transform:translateY(0);}
-.pk-btn-sec{background:#6b7280;}
-.pk-btn-sec:hover{background:#4b5563;box-shadow:0 4px 12px rgba(107,114,128,0.25);}
-.pk-btn-danger{background:#ef4444;}
-.pk-btn-danger:hover{background:#dc2626;box-shadow:0 4px 12px rgba(239,68,68,0.25);}
-.pk-btn-sm{padding:6px 12px;font-size:12px;border-radius:6px;}
+.pk-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--primary);
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
+  box-shadow: var(--shadow-sm);
+}
+.pk-btn:hover {
+  background: var(--primary-hover);
+  box-shadow: 0 10px 15px -3px rgba(13, 148, 136, 0.25);
+  transform: translateY(-1px);
+}
+.pk-btn:active {
+  transform: translateY(1px);
+  box-shadow: var(--shadow-sm);
+}
+.pk-btn-sec {
+  background: #64748b;
+}
+.pk-btn-sec:hover {
+  background: #475569;
+  box-shadow: 0 10px 15px -3px rgba(100, 116, 139, 0.25);
+}
+.pk-btn-danger {
+  background: var(--danger);
+}
+.pk-btn-danger:hover {
+  background: #dc2626;
+  box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.25);
+}
+.pk-btn-sm {
+  padding: 8px 16px;
+  font-size: 12px;
+  border-radius: var(--radius-sm);
+}
 
-.pk-error{color:#ef4444;font-size:13px;margin-top:6px;font-weight:500;}
+.pk-error {
+  color: var(--danger);
+  font-size: 13px;
+  margin-top: 6px;
+  font-weight: 500;
+  background: #fef2f2;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--danger);
+}
 
 /* Layout */
-.pk-shell{display:flex;min-height:100vh;flex-direction:column;}
-.pk-grid-menu{display:grid;grid-template-columns:repeat(auto-fill, minmax(160px, 1fr));gap:24px;margin-top:20px;}
-.pk-menu-box{background:#fff;border-radius:16px;padding:32px 16px;text-align:center;cursor:pointer;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);border:1px solid #e5e7eb;transition:all 0.2s ease;}
-.pk-menu-box:hover{transform:translateY(-4px);box-shadow:0 12px 20px -5px rgba(0,0,0,0.1);border-color:#10b981;}
-.pk-menu-icon{font-size:42px;margin-bottom:16px;}
-.pk-menu-title{font-weight:600;font-size:15px;color:#374151;}
+.pk-shell {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+}
+.pk-grid-menu {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 20px;
+  margin-top: 24px;
+}
+.pk-menu-box {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: 28px 16px;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.pk-menu-box:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+.pk-menu-icon {
+  font-size: 38px;
+  margin-bottom: 12px;
+  transition: all 0.2s ease;
+}
+.pk-menu-box:hover .pk-menu-icon {
+  transform: scale(1.1);
+}
+.pk-menu-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-main);
+  font-family: var(--font-title);
+}
 
 /* Topbar & Content */
-.pk-main-wrap{flex:1;display:flex;flex-direction:column;background:#f3f4f6;min-width:0;height:100vh;overflow-y:auto;}
-.pk-topbar{display:flex;justify-content:space-between;align-items:center;background:#fff;padding:16px 24px;border-bottom:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,0.02);position:sticky;top:0;z-index:5;}
-.pk-content{padding:24px;background:#fff;margin:24px;border-radius:12px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);border:1px solid #e5e7eb;}
-.pk-content h2{margin-top:0;font-size:22px;color:#111827;font-weight:700;margin-bottom:24px;}
-.pk-content h3{font-size:18px;color:#1f2937;font-weight:600;margin-bottom:16px;margin-top:24px;}
+.pk-main-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-main);
+  min-width: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+.pk-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #ffffff;
+  padding: 16px 32px;
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.pk-content {
+  padding: 32px;
+  background: #ffffff;
+  margin: 32px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border);
+}
+.pk-content h2 {
+  margin-top: 0;
+  font-size: 24px;
+  color: var(--text-main);
+  font-weight: 700;
+  font-family: var(--font-title);
+  margin-bottom: 24px;
+  position: relative;
+  display: inline-block;
+}
+.pk-content h3 {
+  font-size: 18px;
+  color: var(--text-main);
+  font-weight: 700;
+  font-family: var(--font-title);
+  margin-bottom: 16px;
+  margin-top: 32px;
+}
 
 /* Table */
-.pk-table{width:100%;border-collapse:separate;border-spacing:0;font-size:14px;margin-top:16px;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;}
-.pk-table th,.pk-table td{border-bottom:1px solid #e5e7eb;padding:12px 16px;text-align:left;}
-.pk-table th{background:#f9fafb;font-weight:600;color:#374151;text-transform:uppercase;font-size:12px;letter-spacing:0.5px;}
-.pk-table tr:last-child td{border-bottom:none;}
-.pk-table tr:hover td{background:#f9fafb;}
+.pk-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 14px;
+  margin-top: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.pk-table th, .pk-table td {
+  border-bottom: 1px solid var(--border);
+  padding: 14px 20px;
+  text-align: left;
+}
+.pk-table th {
+  background: #f8fafc;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.75px;
+}
+.pk-table tr:last-child td { border-bottom: none; }
+.pk-table tr:hover td { background: #f8fafc; }
 
 /* Flex Grid */
-.pk-flex{display:flex;gap:16px;flex-wrap:wrap;}
-.pk-flex>div{flex:1;min-width:200px;}
+.pk-flex {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.pk-flex > div {
+  flex: 1;
+  min-width: 220px;
+}
 
 /* Dashboard Cards */
-.pk-card{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:24px;text-align:left;box-shadow:0 2px 4px rgba(0,0,0,0.02);transition:transform 0.2s, box-shadow 0.2s;}
-.pk-card:hover{transform:translateY(-2px);box-shadow:0 10px 15px -3px rgba(0,0,0,0.05);}
-.pk-card h4{margin:0 0 12px;font-size:13px;color:#6b7280;text-transform:uppercase;font-weight:600;letter-spacing:0.5px;}
-.pk-card .val{font-size:32px;font-weight:700;color:#10b981;}
+.pk-card {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  text-align: left;
+  box-shadow: var(--shadow-md);
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+.pk-card::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--primary);
+}
+.pk-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+.pk-card h4 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.75px;
+}
+.pk-card .val {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--primary);
+  font-family: var(--font-title);
+}
 
 /* Tabs */
-.pk-tabs{display:flex;gap:16px;margin-bottom:24px;border-bottom:2px solid #e5e7eb;}
-.pk-tab{padding:10px 4px;cursor:pointer;font-size:14px;font-weight:500;color:#6b7280;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.2s;}
-.pk-tab:hover{color:#374151;}
-.pk-tab.active{border-bottom-color:#10b981;color:#10b981;}
+.pk-tabs {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 24px;
+  border-bottom: 2px solid var(--border);
+}
+.pk-tab {
+  padding: 12px 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s;
+}
+.pk-tab:hover { color: var(--text-main); }
+.pk-tab.active {
+  border-bottom-color: var(--primary);
+  color: var(--primary);
+}
 
 /* Badges */
-.pk-badge{display:inline-block;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600;}
-.pk-badge-red{background:#fee2e2;color:#b91c1c;}
-.pk-badge-green{background:#d1fae5;color:#047857;}
-.pk-badge-amber{background:#fef3c7;color:#b45309;}
+.pk-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.pk-badge-red { background: #fee2e2; color: #ef4444; }
+.pk-badge-green { background: #d1fae5; color: #10b981; }
+.pk-badge-amber { background: #fef3c7; color: #f59e0b; }
 
 /* Cart */
-.pk-cart-row{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid #f3f4f6;font-size:14px;}
-.pk-cart-row span{flex:1;}
-.pk-cart-row:last-child{border-bottom:none;}
-.pk-search-box{padding:12px 16px;width:100%;border:1px solid #d1d5db;border-radius:8px;margin-bottom:16px;font-size:14px;transition:all 0.2s;font-family:inherit;}
-.pk-search-box:focus{outline:none;border-color:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,0.2);}
+.pk-cart-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 14px;
+}
+.pk-cart-row span { flex: 1; font-weight: 500; }
+.pk-cart-row:last-child { border-bottom: none; }
+.pk-search-box {
+  padding: 12px 18px;
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--radius-md);
+  margin-bottom: 20px;
+  font-size: 14px;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.pk-search-box:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+}
+
+/* Dynamic Varian Row & Dynamic Table Inputs */
+.pk-varian-row input {
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  transition: all 0.2s;
+}
+.pk-varian-row input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+}
+.pk-cart-row input, .pk-table input {
+  padding: 6px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  transition: all 0.2s;
+}
+.pk-cart-row input:focus, .pk-table input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+}
 
 /* Responsive / Mobile Friendly */
 @media (max-width: 768px) {
-  .pk-login-wrap{padding:30px 24px; border-radius:20px; max-width:90%;}
-  .pk-login-wrap h2{font-size:22px;}
-  .pk-topbar{padding:12px 16px; flex-direction:column; gap:12px; align-items:stretch;}
-  .pk-topbar > div{display:flex; justify-content:space-between; align-items:center;}
-  #pkStoreName{font-size:16px !important;}
-  .pk-content{margin:12px; padding:16px; border-radius:10px;}
-  .pk-content h2{font-size:20px; margin-bottom:16px;}
-  .pk-table{display:block; overflow-x:auto; white-space:nowrap;}
-  .pk-grid-menu{grid-template-columns:repeat(auto-fill, minmax(130px, 1fr)); gap:12px;}
-  .pk-menu-box{padding:20px 10px;}
-  .pk-menu-icon{font-size:32px; margin-bottom:12px;}
-  .pk-menu-title{font-size:13px;}
-  .pk-flex > div{min-width:100%;}
-  .pk-tabs{overflow-x:auto; white-space:nowrap; padding-bottom:4px;}
-  .pk-card{padding:16px;}
-  .pk-card .val{font-size:24px;}
+  .pk-login-wrap { padding: 36px 24px; border-radius: var(--radius-md); max-width: 100%; }
+  .pk-login-wrap h2 { font-size: 24px; }
+  .pk-topbar { padding: 16px 20px; flex-direction: column; gap: 12px; align-items: stretch; }
+  .pk-topbar > div { display: flex; justify-content: space-between; align-items: center; }
+  #pkStoreName { font-size: 16px !important; }
+  .pk-content { margin: 16px; padding: 20px; border-radius: var(--radius-md); }
+  .pk-content h2 { font-size: 20px; margin-bottom: 16px; }
+  .pk-table { display: block; overflow-x: auto; white-space: nowrap; }
+  .pk-grid-menu { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
+  .pk-menu-box { padding: 20px 10px; }
+  .pk-menu-icon { font-size: 32px; margin-bottom: 8px; }
+  .pk-menu-title { font-size: 13px; }
+  .pk-flex > div { min-width: 100%; }
+  .pk-tabs { overflow-x: auto; white-space: nowrap; padding-bottom: 4px; }
+  .pk-card { padding: 16px; }
+  .pk-card .val { font-size: 26px; }
 }
 
 /* Custom Scrollbar */
-::-webkit-scrollbar{width:8px;height:8px;}
-::-webkit-scrollbar-track{background:#f3f4f6;}
-::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px;}
-::-webkit-scrollbar-thumb:hover{background:#94a3b8;}
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #f1f5f9; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
 /* Receipt Print */
-#pk-receipt{font-family:monospace;font-size:12px;width:280px;margin:0 auto;padding:10px;color:#000;background:#fff;}
-@media print{
-  body *{visibility:hidden;}
-  #pk-receipt,#pk-receipt *{visibility:visible;}
-  #pk-receipt{position:absolute;left:0;top:0;width:100%;}
+#pk-receipt { font-family: monospace; font-size: 12px; width: 280px; margin: 0 auto; padding: 10px; color: #000; background: #fff; }
+@media print {
+  body * { visibility: hidden; }
+  #pk-receipt, #pk-receipt * { visibility: visible; }
+  #pk-receipt { position: absolute; left: 0; top: 0; width: 100%; }
 }
 </style>
 </head>
@@ -126,6 +475,7 @@
   <div id='pkLoginScreen'>
     <div class='pk-login-wrap'>
       <h2>Kasir Toko Bangunan</h2>
+      <p class="subtitle" style="text-align:center;color:#64748b;margin-top:-20px;margin-bottom:24px;font-size:13px;">Kelola Penjualan, Stok, Hutang & Piutang dengan Mudah</p>
       <div class='pk-field'>
         <label>Username</label>
         <input id='pkLoginUser' placeholder='admin' type='text'/>
@@ -362,11 +712,12 @@ function pkView_produk(){
 }
 function pkRenderKategoriList(){
   document.getElementById('pkProdukBody').innerHTML = `
-    <div class="pk-flex">
-      <div>
-        <input class="pk-field" id="pkKatNama" placeholder="Nama kategori baru" style="padding:8px;width:100%;border:1px solid #ccc;border-radius:4px;">
+    <div class="pk-flex" style="align-items:flex-end;margin-bottom:16px;">
+      <div class="pk-field" style="margin-bottom:0;flex:1;">
+        <label>Nama Kategori Baru</label>
+        <input id="pkKatNama" placeholder="Contoh: Semen & Mortar">
       </div>
-      <div style="flex:0 0 auto;"><button class="pk-btn" onclick="pkAddKategori()">Tambah</button></div>
+      <div style="flex:0 0 auto;"><button class="pk-btn" onclick="pkAddKategori()">Tambah Kategori</button></div>
     </div>
     <table class="pk-table"><tr><th>ID</th><th>Nama Kategori</th><th>Aksi</th></tr>
     ${DB.kategori.map(k=>`<tr><td>${k.id}</td><td>${k.nama}</td>
@@ -441,11 +792,11 @@ function pkAddVarianRow(){
   row.className = 'pk-flex pk-varian-row';
   row.style.marginBottom = '8px';
   row.innerHTML = `
-    <input class="pkVarianNama" placeholder="Varian" style="flex:2;padding:6px;border:1px solid #ccc;border-radius:4px;">
-    <input type="number" step="0.01" class="pkVarianStok" placeholder="Stok" style="flex:1;padding:6px;border:1px solid #ccc;border-radius:4px;">
-    <input type="number" class="pkVarianHargaBeli" placeholder="Modal(opsional)" style="flex:1.5;padding:6px;border:1px solid #ccc;border-radius:4px;">
-    <input type="number" class="pkVarianHargaJual" placeholder="Jual(opsional)" style="flex:1.5;padding:6px;border:1px solid #ccc;border-radius:4px;">
-    <button class="pk-btn pk-btn-danger pk-btn-sm" onclick="this.parentNode.remove()">X</button>
+    <input class="pkVarianNama" placeholder="Varian" style="flex:2;">
+    <input type="number" step="0.01" class="pkVarianStok" placeholder="Stok" style="flex:1;">
+    <input type="number" class="pkVarianHargaBeli" placeholder="Modal (opsional)" style="flex:1.5;">
+    <input type="number" class="pkVarianHargaJual" placeholder="Jual (opsional)" style="flex:1.5;">
+    <button class="pk-btn pk-btn-danger pk-btn-sm" style="padding:6px 10px;" onclick="this.parentNode.remove()">X</button>
   `;
   document.getElementById('pkVarianList').appendChild(row);
 }
@@ -717,9 +1068,9 @@ function pkRenderCart(){
     <div class="pk-cart-row" style="flex-wrap:wrap;">
       <div style="flex:1;min-width:120px;">${c.nama} ${c.varian ? `<br><small style="color:#047857">${c.varian}</small>` : ''}</div>
       <div style="display:flex;gap:6px;align-items:center;">
-        <input type="number" step="0.01" style="width:60px;padding:6px;border:1px solid #ccc;border-radius:4px;" value="${c.qty}" onchange="pkSetQtyByIndex(${i}, this.value)" title="Qty">
+        <input type="number" step="0.01" style="width:70px;" value="${c.qty}" onchange="pkSetQtyByIndex(${i}, this.value)" title="Qty">
         <span style="color:#888;">x</span>
-        <input type="number" style="width:90px;padding:6px;border:1px solid #ccc;border-radius:4px;" value="${c.harga}" onchange="pkSetHargaByIndex(${i}, this.value)" title="Harga Satuan">
+        <input type="number" style="width:100px;" value="${c.harga}" onchange="pkSetHargaByIndex(${i}, this.value)" title="Harga Satuan">
       </div>
       <div style="text-align:right;width:80px;font-weight:600;">${pkFmt(c.harga*c.qty)}</div>
     </div>
