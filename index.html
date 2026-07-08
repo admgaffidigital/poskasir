@@ -185,11 +185,11 @@
 }
 .pk-menu-box {
   background: var(--bg-card);
-  border-radius: var(--radius-md);
-  padding: 28px 16px;
+  border-radius: 16px;
+  padding: 24px 16px;
   text-align: center;
   cursor: pointer;
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.05);
   border: 1px solid var(--border);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
@@ -198,21 +198,25 @@
   justify-content: center;
 }
 .pk-menu-box:hover {
-  transform: translateY(-4px) scale(1.02);
-  box-shadow: var(--shadow-lg);
-  border-color: var(--primary);
-  background: var(--primary-light);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px -6px rgba(13, 148, 136, 0.12);
+  border-color: rgba(13, 148, 136, 0.3);
 }
-.pk-menu-icon {
-  font-size: 38px;
+.pk-menu-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
   margin-bottom: 12px;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
 }
-.pk-menu-box:hover .pk-menu-icon {
-  transform: scale(1.1);
+.pk-menu-box:hover .pk-menu-icon-wrap {
+  transform: scale(1.08);
 }
 .pk-menu-title {
-  font-weight: 600;
+  font-weight: 700;
   font-size: 14px;
   color: var(--text-main);
   font-family: var(--font-title);
@@ -560,8 +564,9 @@
   }
 
   .pk-grid-menu { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
-  .pk-menu-box { padding: 20px 10px; }
-  .pk-menu-icon { font-size: 32px; margin-bottom: 8px; }
+  .pk-menu-box { padding: 20px 10px; border-radius: 12px; }
+  .pk-menu-icon-wrap { width: 48px; height: 48px; margin-bottom: 8px; }
+  .pk-menu-icon-wrap svg { width: 22px; height: 22px; }
   .pk-menu-title { font-size: 13px; }
   .pk-flex > div { min-width: 100%; }
   .pk-tabs { overflow-x: auto; white-space: nowrap; padding-bottom: 4px; }
@@ -803,17 +808,85 @@ function pkView_home(){
     pengaturan: 'settings',
     backup: 'database'
   };
-  let html = '<h2>Menu Utama</h2><div class="pk-grid-menu">';
-  menus.forEach(m=>{
-    html += `<div class="pk-menu-box" onclick="pkNav('${m.key}')">
-      <div class="pk-menu-icon" style="display:flex;align-items:center;justify-content:center;height:48px;margin-bottom:12px;color:var(--primary);">
-        <i data-lucide="${icons[m.key]||'pin'}" style="width:36px;height:36px;stroke-width:1.5;"></i>
+  const colors = {
+    dashboard: '#3b82f6',     // blue
+    transaksi: '#0d9488',     // teal
+    produk: '#6366f1',        // indigo
+    pelanggan: '#f59e0b',     // amber
+    pembelian: '#06b6d4',     // cyan
+    supplier: '#ec4899',      // pink
+    hutangpiutang: '#ef4444', // red
+    loyalty: '#10b981',       // emerald
+    karyawan: '#8b5cf6',      // violet
+    laporan: '#14b8a6',       // teal/cyan
+    pengaturan: '#64748b',    // slate
+    backup: '#475569'         // dark slate
+  };
+
+  // Calculate live statistics for home dashboard
+  const todayStr = pkToday();
+  const todayTransactions = DB.transaksi.filter(t => t.tanggal.startsWith(todayStr));
+  const revenueToday = todayTransactions.reduce((sum, t) => sum + t.total, 0);
+  const salesCount = todayTransactions.length;
+  
+  let lowStockCount = 0;
+  DB.produk.filter(p=>p.status!=='nonaktif').forEach(p=>{
+    let st = p.has_varian ? (p.varian||[]).reduce((a,v)=>a+v.stok,0) : p.stok;
+    if(st <= p.stok_min) lowStockCount++;
+  });
+
+  let html = `
+    <!-- Top Level Dashboard Stats Card Group -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:16px;margin-bottom:32px;">
+      <div style="background:linear-gradient(135deg, #0d9488, #0f766e);color:#ffffff;border-radius:16px;padding:20px;box-shadow:0 8px 20px -6px rgba(13,148,136,0.3);display:flex;align-items:center;gap:16px;">
+        <div style="background:rgba(255,255,255,0.18);width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <i data-lucide="trending-up" style="width:22px;height:22px;"></i>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;opacity:0.85;text-transform:uppercase;letter-spacing:0.5px;">Omzet Hari Ini</div>
+          <div style="font-size:18px;font-weight:800;font-family:var(--font-title);margin-top:2px;">${pkFmt(revenueToday)}</div>
+        </div>
       </div>
-      <div class="pk-menu-title">${m.label}</div>
-    </div>`;
+      
+      <div style="background:linear-gradient(135deg, #3b82f6, #1d4ed8);color:#ffffff;border-radius:16px;padding:20px;box-shadow:0 8px 20px -6px rgba(59,130,246,0.3);display:flex;align-items:center;gap:16px;">
+        <div style="background:rgba(255,255,255,0.18);width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <i data-lucide="shopping-cart" style="width:22px;height:22px;"></i>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;opacity:0.85;text-transform:uppercase;letter-spacing:0.5px;">Transaksi Kasir</div>
+          <div style="font-size:18px;font-weight:800;font-family:var(--font-title);margin-top:2px;">${salesCount} Penjualan</div>
+        </div>
+      </div>
+
+      <div style="background:linear-gradient(135deg, #f59e0b, #d97706);color:#ffffff;border-radius:16px;padding:20px;box-shadow:0 8px 20px -6px rgba(245,158,11,0.3);display:flex;align-items:center;gap:16px;">
+        <div style="background:rgba(255,255,255,0.18);width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <i data-lucide="alert-triangle" style="width:22px;height:22px;"></i>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;opacity:0.85;text-transform:uppercase;letter-spacing:0.5px;">Stok Menipis</div>
+          <div style="font-size:18px;font-weight:800;font-family:var(--font-title);margin-top:2px;">${lowStockCount} Produk</div>
+        </div>
+      </div>
+    </div>
+
+    <h2>Menu Utama</h2>
+    <div class="pk-grid-menu">
+  `;
+
+  menus.forEach(m=>{
+    const color = colors[m.key] || 'var(--primary)';
+    html += `
+      <div class="pk-menu-box" onclick="pkNav('${m.key}')">
+        <div class="pk-menu-icon-wrap" style="background:${color}15;color:${color};">
+          <i data-lucide="${icons[m.key]||'pin'}" style="width:26px;height:26px;stroke-width:2;"></i>
+        </div>
+        <div class="pk-menu-title">${m.label}</div>
+      </div>
+    `;
   });
   html += '</div>';
   document.getElementById('pkMain').innerHTML = html;
+  if(typeof lucide !== 'undefined') lucide.createIcons();
 }
 function pkFmt(n){ return DB.pengaturan.mata_uang + ' ' + Number(n||0).toLocaleString('id-ID'); }
 function pkToday(){ return new Date().toISOString().slice(0,10); }
