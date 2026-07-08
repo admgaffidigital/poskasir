@@ -595,11 +595,22 @@
 ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
 /* Receipt Print */
-#pk-receipt { font-family: monospace; font-size: 12px; width: 280px; margin: 0 auto; padding: 10px; color: #000; background: #fff; }
+#pk-receipt { font-family: monospace; font-size: 11px; width: 280px; margin: 0 auto; padding: 10px; color: #000; background: #fff; }
 @media print {
-  body * { visibility: hidden; }
-  #pk-receipt, #pk-receipt * { visibility: visible; }
-  #pk-receipt { position: absolute; left: 0; top: 0; width: 100%; }
+  body > *:not(#pk-receipt) {
+    display: none !important;
+  }
+  #pk-receipt {
+    display: block !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 280px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
 }
 </style>
 </head>
@@ -648,8 +659,9 @@
     </div>
   </div>
 
-  <div class='pk-hidden' id='pk-receipt'></div>
+  </div>
 </div>
+<div class='pk-hidden' id='pk-receipt'></div>
 <script>
 /* =========================================================
    POS KASIR TOKO BANGUNAN - Single file, client-side only
@@ -1754,35 +1766,114 @@ function pkCetakStruk(trId){
   const t = DB.transaksi.find(x=>x.id===trId);
   const items = DB.transaksiDetail.filter(d=>d.transaksi_id===trId);
   const s = DB.pengaturan;
-  let html = `<div>${s.nama_toko}<br>${s.alamat}<br>${s.no_telp}</div><hr>`;
-  html += `No: ${t.no}<br>Tgl: ${t.tanggal.slice(0,19).replace('T',' ')}<br><hr>`;
-  items.forEach(i=>{
-    const nama = i.nama_item || (DB.produk.find(x=>x.id===i.produk_id)?.nama) || '-';
-    html += `${nama}<br>${i.qty} x ${pkFmt(i.harga)} = ${pkFmt(i.subtotal)}<br>`;
-  });
   
-  let bayarHtml = '';
-  if(t.metode_bayar === 'tunai'){
-    const b = t.bayar !== undefined ? t.bayar : t.total;
-    const k = t.kembalian !== undefined ? t.kembalian : 0;
-    bayarHtml = `Bayar (Tunai): ${pkFmt(b)}<br>Kembalian: ${pkFmt(k)}<br>`;
-  } else {
-    bayarHtml = `Bayar (${t.metode_bayar.toUpperCase()}): ${pkFmt(t.total)}<br>`;
-  }
+  let html = `
+  <div style="text-align:center;font-size:12px;line-height:1.4;margin-bottom:8px;">
+    <div style="font-weight:700;font-size:14px;text-transform:uppercase;">${s.nama_toko}</div>
+    <div style="color:#475569;font-size:10px;margin-top:2px;">${s.alamat}</div>
+    <div style="color:#475569;font-size:10px;">Telp: ${s.no_telp}</div>
+  </div>
+  <div style="border-top:1px dashed #000;margin:6px 0;"></div>
   
-  let poinHtml = '';
-  if(t.poin_didapat > 0 || t.hadiah_klaim){
-    poinHtml = `<hr>Poin Didapat: +${t.poin_didapat}<br>`;
-    if(t.hadiah_klaim){
-      poinHtml += `Klaim Hadiah: ${t.hadiah_klaim} (-${t.hadiah_poin})<br>`;
-    }
-    const c = DB.pelanggan.find(x=>x.id===t.pelanggan_id);
-    if(c){
-      poinHtml += `Sisa Saldo Poin: ${c.poin}<br>`;
-    }
-  }
-  
-  html += `<hr>Subtotal: ${pkFmt(t.subtotal)}<br>Diskon: ${pkFmt(t.diskon)}<br><b>Total: ${pkFmt(t.total)}</b><br>${bayarHtml}${poinHtml}<hr>${s.footer_struk}`;
+  <table style="width:100%;font-size:11px;border-collapse:collapse;line-height:1.4;margin-bottom:6px;">
+    <tr>
+      <td style="color:#475569;">No. Trans</td>
+      <td style="text-align:right;font-weight:600;">${t.no}</td>
+    </tr>
+    <tr>
+      <td style="color:#475569;">Tanggal</td>
+      <td style="text-align:right;">${t.tanggal.slice(0,16).replace('T',' ')}</td>
+    </tr>
+    <tr>
+      <td style="color:#475569;">Metode Bayar</td>
+      <td style="text-align:right;text-transform:uppercase;font-weight:600;">${t.metode_bayar}</td>
+    </tr>
+  </table>
+  <div style="border-top:1px dashed #000;margin:6px 0;"></div>
+
+  <!-- Daftar Items -->
+  <div style="font-size:11px;margin-bottom:6px;">
+    ${items.map(i => {
+      const nama = i.nama_item || (DB.produk.find(x=>x.id===i.produk_id)?.nama) || '-';
+      return `
+        <div style="margin-bottom:6px;">
+          <div style="font-weight:600;word-break:break-word;">${nama}</div>
+          <div style="display:flex;justify-content:space-between;color:#334155;font-size:10.5px;margin-top:1px;">
+            <span>${i.qty} x ${pkFmt(i.harga)}</span>
+            <span style="font-weight:600;color:#000;">${pkFmt(i.subtotal)}</span>
+          </div>
+        </div>
+      `;
+    }).join('')}
+  </div>
+  <div style="border-top:1px dashed #000;margin:6px 0;"></div>
+
+  <!-- Total Pembayaran -->
+  <table style="width:100%;font-size:11px;border-collapse:collapse;line-height:1.4;">
+    <tr>
+      <td>Subtotal</td>
+      <td style="text-align:right;">${pkFmt(t.subtotal)}</td>
+    </tr>
+    ${t.diskon > 0 ? `
+    <tr>
+      <td>Diskon</td>
+      <td style="text-align:right;color:#dc2626;">-${pkFmt(t.diskon)}</td>
+    </tr>
+    ` : ''}
+    <tr style="font-weight:700;font-size:12px;border-top:1px dotted #000;">
+      <td style="padding-top:4px;">Total</td>
+      <td style="text-align:right;padding-top:4px;">${pkFmt(t.total)}</td>
+    </tr>
+    ${t.metode_bayar === 'tunai' ? `
+    <tr>
+      <td style="padding-top:4px;">Bayar (Tunai)</td>
+      <td style="text-align:right;padding-top:4px;">${pkFmt(t.bayar || t.total)}</td>
+    </tr>
+    <tr style="font-weight:600;">
+      <td>Kembalian</td>
+      <td style="text-align:right;color:#16a34a;">${pkFmt(t.kembalian || 0)}</td>
+    </tr>
+    ` : `
+    <tr>
+      <td style="padding-top:4px;">Bayar</td>
+      <td style="text-align:right;padding-top:4px;">${pkFmt(t.total)}</td>
+    </tr>
+    `}
+  </table>
+
+  <!-- Poin Loyalty & Hadiah -->
+  ${(t.poin_didapat > 0 || t.hadiah_klaim) ? `
+    <div style="border-top:1px dashed #000;margin:6px 0;"></div>
+    <table style="width:100%;font-size:10px;color:#334155;border-collapse:collapse;line-height:1.3;">
+      ${t.poin_didapat > 0 ? `
+      <tr>
+        <td>Poin Diperoleh</td>
+        <td style="text-align:right;font-weight:600;color:#2563eb;">+${t.poin_didapat} Pts</td>
+      </tr>
+      ` : ''}
+      ${t.hadiah_klaim ? `
+      <tr>
+        <td>Klaim Hadiah</td>
+        <td style="text-align:right;font-weight:600;color:#dc2626;">${t.hadiah_klaim} (-${t.hadiah_poin} Pts)</td>
+      </tr>
+      ` : ''}
+      ${(() => {
+        const c = DB.pelanggan.find(x=>x.id===t.pelanggan_id);
+        return c ? `
+        <tr style="font-weight:600;color:#000;">
+          <td style="padding-top:2px;">Sisa Saldo Poin</td>
+          <td style="text-align:right;padding-top:2px;">${c.poin} Pts</td>
+        </tr>
+        ` : '';
+      })()}
+    </table>
+  ` : ''}
+
+  <div style="border-top:1px dashed #000;margin:6px 0;"></div>
+  <div style="text-align:center;font-size:10px;color:#475569;margin-top:6px;line-height:1.3;white-space:pre-line;">
+    ${s.footer_struk}
+  </div>
+  `;
   
   // Set hidden printable element
   const r = document.getElementById('pk-receipt');
