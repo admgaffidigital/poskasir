@@ -524,3 +524,94 @@ h2 { font-size: 24px; margin-bottom: 24px; letter-spacing: -0.5px; }
     background: #fff !important; color: #000 !important;
   }
 }
+
+
+/* ================= LIST VIEW ================= */
+.pk-list-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+.pk-list-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.pk-list-item:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-light);
+  transform: translateY(-2px);
+}
+.pk-list-body {
+  flex: 1;
+  min-width: 200px;
+}
+.pk-list-title {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-main);
+  margin-bottom: 4px;
+}
+.pk-list-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+.pk-list-action {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* ================= GRID MENU (DASHBOARD) ================= */
+.pk-grid-menu {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+.pk-grid-menu-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+}
+.pk-grid-menu-btn i {
+  width: 32px;
+  height: 32px;
+  color: var(--primary);
+  stroke-width: 2px;
+  transition: all 0.3s ease;
+}
+.pk-grid-menu-btn span {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-main);
+}
+.pk-grid-menu-btn:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+.pk-grid-menu-btn:hover i {
+  transform: scale(1.1);
+}
