@@ -689,9 +689,12 @@ function pkLoadEditProduk(id){
     });
   }
   
-  document.querySelector('#pkProdukBody h3').innerText = 'Edit Produk';
-  document.getElementById('pkPrBtnSimpan').innerText = 'Simpan Perubahan';
-  document.getElementById('pkPrBtnBatal').classList.remove('pk-hidden');
+  const titleEl = document.getElementById('pkPrTitle');
+  if(titleEl) titleEl.innerText = 'Edit Produk';
+  const simpanEl = document.getElementById('pkPrBtnSimpan');
+  if(simpanEl) simpanEl.innerText = 'Simpan Perubahan';
+  const batalEl = document.getElementById('pkPrBtnBatal');
+  if(batalEl) batalEl.classList.remove('pk-hidden');
   window.scrollTo(0,0);
 }
 function pkDelProduk(id){
@@ -818,19 +821,25 @@ function pkCalcKembalian(){
   }
 }
 
-function pkTrOnMetodeChange(val){
-  const cashField = document.getElementById('pkCashFieldWrapper');
+function pkTrOnMetodeChange(val){ pkTrMetodeChange(val); }
+function pkTrMetodeChange(val){
+  const cashField = document.getElementById('pkTrBayarWrap');
   if(!cashField) return;
   if(val === 'tunai'){
     cashField.style.display = 'block';
     const subtotal = pkCart.reduce((a,c)=>a+c.harga*c.qty,0);
     const diskon = Number(document.getElementById('pkTrDiskon')?.value||0);
     const total = Math.max(0, subtotal - diskon);
-    document.getElementById('pkTrBayar').value = total;
-    pkCalcKembalian();
+    const bayarEl = document.getElementById('pkTrBayar');
+    if(bayarEl) { bayarEl.value = total; pkCalcKembalian(); }
   } else {
     cashField.style.display = 'none';
   }
+}
+function pkTrPelangganChange(val){
+  // Update poin display if needed
+  const pel = DB.pelanggan.find(c=>c.id===Number(val));
+  // Could update poin display here
 }
 
 function pkRenderTransaksi(){
@@ -875,8 +884,8 @@ function pkRenderTransaksi(){
     let subtotal = 0;
     
     if(pkCart.length === 0){
-      cartHtml = '<div style="text-align:center;padding:40px;color:var(--text-muted);">Keranjang kosong</div>';
-    }else{
+      cartHtml = '<div style="text-align:center;padding:40px;color:var(--text-muted);">Keranjang kosong. Kembali dan pilih produk.</div>';
+    } else {
       cartHtml = '<div class="pk-list-group">';
       pkCart.forEach((c,i)=>{
         const itemTotal = c.harga * c.qty;
@@ -888,9 +897,10 @@ function pkRenderTransaksi(){
               <div class="pk-list-desc">Harga: ${pkFmt(c.harga)} &bull; Subtotal: <b style="color:var(--primary);">${pkFmt(itemTotal)}</b></div>
             </div>
             <div class="pk-list-action" style="display:flex;align-items:center;gap:8px;">
-              <button class="pk-btn pk-btn-sec pk-btn-sm" style="padding:4px 10px;" onclick="pkUpdateCartQty(${i}, ${c.qty-1})">-</button>
+              <button class="pk-btn pk-btn-sec pk-btn-sm" style="padding:4px 10px;" onclick="pkSetQtyByIndex(${i}, ${c.qty-1})">-</button>
               <span style="font-weight:700;width:30px;text-align:center;">${c.qty}</span>
-              <button class="pk-btn pk-btn-sec pk-btn-sm" style="padding:4px 10px;" onclick="pkUpdateCartQty(${i}, ${c.qty+1})">+</button>
+              <button class="pk-btn pk-btn-sec pk-btn-sm" style="padding:4px 10px;" onclick="pkSetQtyByIndex(${i}, ${c.qty+1})">+</button>
+              <button class="pk-btn pk-btn-danger pk-btn-sm" style="padding:4px 8px;" onclick="pkRemoveFromCart(${i})"><i data-lucide="trash-2" style="width:13px;height:13px;"></i></button>
             </div>
           </div>
         `;
@@ -901,19 +911,19 @@ function pkRenderTransaksi(){
     main.innerHTML = `
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
         <button class="pk-btn pk-btn-sec" onclick="pkTrGoToStep('produk')" style="padding:8px 12px;"><i data-lucide="arrow-left"></i></button>
-        <h2 style="margin:0;">Keranjang</h2>
+        <h2 style="margin:0;">Keranjang (${pkCart.reduce((a,c)=>a+c.qty,0)} item)</h2>
       </div>
       
       ${cartHtml}
       
       ${pkCart.length>0 ? `
-      <div class="pk-card" style="margin-top:24px;position:sticky;bottom:24px;">
-        <div style="display:flex;justify-content:space-between;margin-bottom:12px;font-size:16px;">
-          <span>Subtotal</span>
-          <span style="font-weight:700;">${pkFmt(subtotal)}</span>
+      <div class="pk-card" style="margin-top:24px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:16px;font-size:16px;">
+          <span style="color:var(--text-muted);">Subtotal</span>
+          <span style="font-weight:800;color:var(--primary);font-size:18px;">${pkFmt(subtotal)}</span>
         </div>
-        <button class="pk-btn pk-btn-large" onclick="pkTrGoToStep('pembayaran')">Lanjut ke Pembayaran</button>
-      </div>` : ''}
+        <button class="pk-btn pk-btn-large" onclick="pkTrGoToStep('pembayaran')">Lanjut ke Pembayaran &rarr;</button>
+      </div>` : '<div style="margin-top:24px;"><button class="pk-btn pk-btn-sec pk-btn-large" onclick="pkTrGoToStep(&#39;produk&#39;)">Pilih Produk</button></div>'}
     `;
   }
   else if(pkTrStep === 'pembayaran'){
@@ -1623,14 +1633,15 @@ let pkEditPelangganId = null;
 function pkView_pelanggan(){
   pkEditPelangganId = null;
   document.getElementById('pkMain').innerHTML = `
+    <h2>Daftar Pelanggan</h2>
     <div class="pk-card" style="margin-bottom:24px;">
       <h3 style="margin-top:0;font-family:var(--font-title);" id="pkPlTitle">Tambah Pelanggan</h3>
       <div class="pk-flex">
-        <div class="pk-field"><label>Nama</label><input id="pkPlNama"></div>
-        <div class="pk-field"><label>No HP</label><input id="pkPlHp"></div>
-        <div class="pk-field"><label>Alamat</label><input id="pkPlAlamat"></div>
-        <div class="pk-field"><label>Tipe</label>
-          <select id="pkPlTipe"><option value="umum">Umum</option><option value="member">Member</option></select>
+        <div class="pk-field"><label>Nama Lengkap</label><input id="pkPlNama" placeholder="Contoh: Budi Santoso"></div>
+        <div class="pk-field"><label>No HP / WhatsApp</label><input id="pkPlHp" placeholder="0812xxxxxxx"></div>
+        <div class="pk-field"><label>Alamat</label><input id="pkPlAlamat" placeholder="Alamat lengkap"></div>
+        <div class="pk-field"><label>Tipe Member</label>
+          <select id="pkPlTipe"><option value="umum">Umum (Tanpa Poin)</option><option value="member">Member (Kumpulkan Poin)</option></select>
         </div>
       </div>
       <div style="display:flex;gap:12px;margin-top:12px;">
@@ -1638,20 +1649,26 @@ function pkView_pelanggan(){
         <button class="pk-btn pk-btn-sec pk-hidden" id="pkPlBtnBatal" onclick="pkView_pelanggan()">Batal</button>
       </div>
     </div>
-    <h3 style="margin-top:24px;">Daftar Pelanggan</h3>
-    <table class="pk-table" style="margin-top:16px;">
-      <tr><th>Nama</th><th>No HP</th><th>Tipe</th><th>Poin</th><th>Aksi</th></tr>
-      ${DB.pelanggan.map(c=>`<tr>
-        <td data-label="Nama">${c.nama}</td>
-        <td data-label="No HP">${c.no_hp}</td>
-        <td data-label="Tipe">${c.tipe}</td>
-        <td data-label="Poin">${c.poin}</td>
-        <td data-label="">
-          <button class="pk-btn pk-btn-sm pk-btn-blue" style="margin-right:4px;" onclick="pkLoadEditPelanggan(${c.id})">Edit</button>
-          <button class="pk-btn pk-btn-danger pk-btn-sm" onclick="pkDelPelanggan(${c.id})">Hapus</button>
-        </td>
-      </tr>`).join('')}
-    </table>
+    <div class="pk-list-group">
+      ${DB.pelanggan.map(c=>{
+        const tipeBadge = c.tipe==='member' ? '<span class="pk-badge pk-badge-blue">Member</span>' : '<span class="pk-badge pk-badge-slate">Umum</span>';
+        return `<div class="pk-list-item">
+          <div class="pk-list-body">
+            <div class="pk-list-title">${c.nama}</div>
+            <div class="pk-list-desc">
+              <span>HP: <b>${c.no_hp||'-'}</b></span> &bull;
+              <span>Tipe: ${tipeBadge}</span> &bull;
+              <span>Poin: <b style="color:var(--primary);">${c.poin||0}</b></span>
+              ${c.alamat ? `&bull; <span>Alamat: ${c.alamat}</span>` : ''}
+            </div>
+          </div>
+          <div class="pk-list-action">
+            <button class="pk-btn pk-btn-sm pk-btn-blue" onclick="pkLoadEditPelanggan(${c.id})">Edit</button>
+            <button class="pk-btn pk-btn-danger pk-btn-sm" onclick="pkDelPelanggan(${c.id})">Hapus</button>
+          </div>
+        </div>`;
+      }).join('') || '<div style="text-align:center;padding:24px;color:var(--text-muted);">Belum ada pelanggan terdaftar</div>'}
+    </div>
   `;
 }
 function pkAddPelanggan(){
@@ -1698,31 +1715,36 @@ let pkEditSupplierId = null;
 function pkView_supplier(){
   pkEditSupplierId = null;
   document.getElementById('pkMain').innerHTML = `
+    <h2>Daftar Supplier</h2>
     <div class="pk-card" style="margin-bottom:24px;">
       <h3 style="margin-top:0;font-family:var(--font-title);" id="pkSpTitle">Tambah Supplier</h3>
       <div class="pk-flex">
-        <div class="pk-field"><label>Nama Supplier</label><input id="pkSpNama"></div>
-        <div class="pk-field"><label>Kontak</label><input id="pkSpKontak"></div>
-        <div class="pk-field"><label>No HP</label><input id="pkSpHp"></div>
+        <div class="pk-field"><label>Nama Supplier / Toko</label><input id="pkSpNama" placeholder="Contoh: CV Sumber Bangunan"></div>
+        <div class="pk-field"><label>Nama Kontak PIC</label><input id="pkSpKontak" placeholder="Nama penanggung jawab"></div>
+        <div class="pk-field"><label>No HP / WhatsApp</label><input id="pkSpHp" placeholder="0812xxxxxxx"></div>
       </div>
       <div style="display:flex;gap:12px;margin-top:12px;">
         <button class="pk-btn" id="pkSpBtnSimpan" onclick="pkAddSupplier()">Simpan Supplier</button>
         <button class="pk-btn pk-btn-sec pk-hidden" id="pkSpBtnBatal" onclick="pkView_supplier()">Batal</button>
       </div>
     </div>
-    <h3 style="margin-top:24px;">Daftar Supplier</h3>
-    <table class="pk-table" style="margin-top:16px;">
-      <tr><th>Nama</th><th>Kontak</th><th>No HP</th><th>Aksi</th></tr>
-      ${DB.supplier.map(s=>`<tr>
-        <td data-label="Nama">${s.nama}</td>
-        <td data-label="Kontak">${s.kontak}</td>
-        <td data-label="No HP">${s.no_hp}</td>
-        <td data-label="">
-          <button class="pk-btn pk-btn-sm pk-btn-blue" style="margin-right:4px;" onclick="pkLoadEditSupplier(${s.id})">Edit</button>
-          <button class="pk-btn pk-btn-danger pk-btn-sm" onclick="pkDelSupplier(${s.id})">Hapus</button>
-        </td>
-      </tr>`).join('')}
-    </table>
+    <div class="pk-list-group">
+      ${DB.supplier.map(s=>`
+        <div class="pk-list-item">
+          <div class="pk-list-body">
+            <div class="pk-list-title">${s.nama}</div>
+            <div class="pk-list-desc">
+              <span>Kontak: <b>${s.kontak||'-'}</b></span> &bull;
+              <span>HP: <b>${s.no_hp||'-'}</b></span>
+            </div>
+          </div>
+          <div class="pk-list-action">
+            <button class="pk-btn pk-btn-sm pk-btn-blue" onclick="pkLoadEditSupplier(${s.id})">Edit</button>
+            <button class="pk-btn pk-btn-danger pk-btn-sm" onclick="pkDelSupplier(${s.id})">Hapus</button>
+          </div>
+        </div>
+      `).join('') || '<div style="text-align:center;padding:24px;color:var(--text-muted);">Belum ada supplier terdaftar</div>'}
+    </div>
   `;
 }
 function pkAddSupplier(){
@@ -1835,19 +1857,24 @@ function pkRenderPembelian(){
         const sbBadge = p.status_bayar === 'lunas'
           ? '<span class="pk-badge pk-badge-green">Lunas</span>'
           : '<span class="pk-badge pk-badge-red">Belum Lunas</span>';
-        return `<tr>
-          <td data-label="No">${p.no}</td>
-          <td data-label="Tanggal">${p.tanggal.slice(0,10)}</td>
-          <td data-label="Supplier">${s?s.nama:'-'}</td>
-          <td data-label="Total" style="font-weight:700;">${pkFmt(p.total)}</td>
-          <td data-label="Status">${sbBadge}</td>
+        return `
+        <div class="pk-list-item">
+          <div class="pk-list-body">
+            <div class="pk-list-title">${p.no}</div>
+            <div class="pk-list-desc">
+              Tanggal: ${p.tanggal.slice(0,10)} &bull;
+              Supplier: <b>${s?s.nama:'-'}</b> &bull;
+              Total: <b style="color:var(--primary);">${pkFmt(p.total)}</b> &bull;
+              Status: ${sbBadge}
+            </div>
+          </div>
           <div class="pk-list-action">
             <button class="pk-btn pk-btn-sec pk-btn-sm" style="display:inline-flex;align-items:center;gap:4px;" onclick="pkCetakPembelian(${p.id})">
               <i data-lucide="printer" style="width:12px;height:12px;"></i> Struk
             </button>
-          </td>
-        </tr>`;
-      }).join('') || '<tr><td colspan="6" class="pk-empty-state">Belum ada riwayat pembelian</div></div>'}
+          </div>
+        </div>`;
+      }).join('') || '<div style="text-align:center;padding:24px;color:var(--text-muted);">Belum ada riwayat pembelian</div>'}
     </div>
   `;
   if(typeof lucide !== 'undefined') lucide.createIcons();
@@ -1991,7 +2018,7 @@ function pkBayarHutang(hutangId){
 }
 function pkRenderPiutang(){
   const today = pkToday();
-  if(document.getElementById('pkHutangList')) document.getElementById('pkHutangList').innerHTML = `
+  if(document.getElementById('pkPiutangList')) document.getElementById('pkPiutangList').innerHTML = `
     <div class="pk-list-group">
     ${DB.piutang.slice().reverse().map(p=>{
       const pel = DB.pelanggan.find(x=>x.id===p.pelanggan_id);
@@ -2025,6 +2052,7 @@ function pkRenderPiutang(){
   `;
   if(typeof lucide !== 'undefined') lucide.createIcons();
 }
+
 function pkBayarPiutang(piutangId){
   const p = DB.piutang.find(x=>x.id===piutangId);
   const jumlah = Number(document.getElementById('pkBayarP'+piutangId).value||0);
@@ -2039,54 +2067,57 @@ function pkBayarPiutang(piutangId){
 let pkEditHadiahId = null;
 
 function pkView_loyalty(){
+  pkEditHadiahId = null;
   document.getElementById('pkMain').innerHTML = `
     <h2>Loyalty & Poin</h2>
     <div class="pk-card" style="margin-bottom:24px;">
-      <h3 style="margin-top:0;">Tambah/Edit Hadiah</h3>
+      <h3 style="margin-top:0;" id="pkHdTitle">Tambah Hadiah Baru</h3>
       <div class="pk-flex" style="align-items:flex-end;">
-        <div class="pk-field" style="margin-bottom:0;flex:1;">
+        <div class="pk-field" style="margin-bottom:0;flex:2;">
           <label>Nama Hadiah</label>
-          <input id="pkHdNama">
+          <input id="pkHdNama" placeholder="Contoh: Voucher Diskon 10%">
         </div>
         <div class="pk-field" style="margin-bottom:0;flex:1;">
-          <label>Poin Dibutuhkan</label>
-          <input id="pkHdPoin" type="number">
+          <label>Poin yang Dibutuhkan</label>
+          <input id="pkHdPoin" type="number" min="1" placeholder="100">
         </div>
-        <div style="flex:0 0 auto;"><button class="pk-btn" id="pkHdBtnSimpan" onclick="pkSimpanHadiah()">Simpan</button></div>
+        <div style="flex:0 0 auto;"><button class="pk-btn" id="pkHdBtnSimpan" onclick="pkSimpanHadiah()">Simpan Hadiah</button></div>
         <div style="flex:0 0 auto;"><button class="pk-btn pk-btn-sec pk-hidden" id="pkHdBtnBatal" onclick="pkView_loyalty()">Batal</button></div>
       </div>
     </div>
 
-    <h3 style="margin-top:24px;">Daftar Hadiah</h3>
+    <h3 style="margin-top:24px;margin-bottom:16px;">Daftar Hadiah Tersedia</h3>
     <div class="pk-list-group">
       ${(DB.hadiah||[]).map(h=>`
         <div class="pk-list-item">
           <div class="pk-list-body">
             <div class="pk-list-title">${h.nama}</div>
-            <div class="pk-list-desc">Kebutuhan Poin: <b>${h.poin_dibutuhkan} poin</b></div>
+            <div class="pk-list-desc">Syarat Penukaran: <b>${h.poin_required||h.poin_dibutuhkan||0} Poin</b></div>
           </div>
           <div class="pk-list-action">
             <button class="pk-btn pk-btn-sm pk-btn-blue" onclick="pkLoadEditHadiah(${h.id})">Edit</button>
             <button class="pk-btn pk-btn-sm pk-btn-danger" onclick="pkDelHadiah(${h.id})">Hapus</button>
           </div>
         </div>
-      `).join('') || '<div style="text-align:center;padding:24px;color:var(--text-muted);">Belum ada daftar hadiah</div>'}
+      `).join('') || '<div style="text-align:center;padding:24px;color:var(--text-muted);">Belum ada hadiah terdaftar. Tambahkan hadiah di atas.</div>'}
     </div>
 
-    <h3 style="margin-top:32px;">Riwayat Poin Pelanggan</h3>
+    <h3 style="margin-top:40px;margin-bottom:16px;">Riwayat Poin Pelanggan</h3>
     <div class="pk-list-group">
       ${DB.poinLog.slice().reverse().map(l=>{
         const pel = DB.pelanggan.find(x=>x.id===l.pelanggan_id);
-        const isTambah = l.jenis==='tambah';
+        const isDapat = l.jenis==='dapat';
+        const isTukar = l.jenis==='tukar';
+        const warna = isDapat ? 'var(--success)' : 'var(--danger)';
+        const tanda = isDapat ? '+' : '-';
         return `
         <div class="pk-list-item">
           <div class="pk-list-body">
-            <div class="pk-list-title">${pel?pel.nama:'-'}</div>
+            <div class="pk-list-title">${pel?pel.nama:'-'} <span class="pk-badge ${isDapat?'pk-badge-green':'pk-badge-amber'}" style="font-size:11px;">${isDapat?'Dapat Poin':'Tukar Poin'}</span></div>
             <div class="pk-list-desc">
-              Jenis: <b style="text-transform:uppercase;">${l.jenis}</b> &bull; 
-              Jumlah: <b style="color:${isTambah?'var(--success)':'var(--danger)'}">${isTambah?'+':'-'}${l.poin}</b> &bull; 
-              Tanggal: ${l.tanggal} &bull; 
-              Keterangan: ${l.keterangan}
+              Poin: <b style="color:${warna};">${tanda}${l.jumlah||l.poin||0}</b> &bull;
+              Tanggal: ${(l.tanggal||'').slice(0,10)} &bull;
+              ${l.keterangan||'-'}
             </div>
           </div>
         </div>`;
@@ -2094,43 +2125,38 @@ function pkView_loyalty(){
     </div>
   `;
 }
-function pkAddHadiah(){
+function pkSimpanHadiah(){
   const nama = document.getElementById('pkHdNama').value.trim();
   const poin = Number(document.getElementById('pkHdPoin').value||0);
   if(!nama || poin <= 0) {
-    alert('Nama dan jumlah poin penukaran harus valid!');
+    alert('Nama hadiah dan poin penukaran wajib diisi dengan benar!');
     return;
   }
-  
   if(!DB.hadiah) DB.hadiah = [];
-  
   if(pkEditHadiahId){
     const h = DB.hadiah.find(x=>x.id===pkEditHadiahId);
-    if(h){
-      h.nama = nama;
-      h.poin_required = poin;
-    }
+    if(h){ h.nama = nama; h.poin_required = poin; }
     pkEditHadiahId = null;
   } else {
-    DB.hadiah.push({
-      id: pkNextId('hadiah'),
-      nama: nama,
-      poin_required: poin
-    });
+    DB.hadiah.push({ id: pkNextId('hadiah'), nama, poin_required: poin });
   }
   pkSave();
   pkView_loyalty();
 }
+function pkAddHadiah(){ pkSimpanHadiah(); }
 
 function pkLoadEditHadiah(id){
   const h = DB.hadiah.find(x=>x.id===id);
   if(!h) return;
   pkEditHadiahId = id;
   document.getElementById('pkHdNama').value = h.nama;
-  document.getElementById('pkHdPoin').value = h.poin_required;
-  document.getElementById('pkHdTitle').innerText = 'Edit Hadiah';
-  document.getElementById('pkHdBtnSimpan').innerText = 'Simpan Perubahan';
-  document.getElementById('pkHdBtnBatal').classList.remove('pk-hidden');
+  document.getElementById('pkHdPoin').value = h.poin_required || h.poin_dibutuhkan || 0;
+  const titleEl = document.getElementById('pkHdTitle');
+  if(titleEl) titleEl.innerText = 'Edit Hadiah';
+  const simpanEl = document.getElementById('pkHdBtnSimpan');
+  if(simpanEl) simpanEl.innerText = 'Simpan Perubahan';
+  const batalEl = document.getElementById('pkHdBtnBatal');
+  if(batalEl) batalEl.classList.remove('pk-hidden');
   window.scrollTo(0,0);
 }
 
@@ -2147,34 +2173,42 @@ let pkEditKaryawanId = null;
 function pkView_karyawan(){
   pkEditKaryawanId = null;
   document.getElementById('pkMain').innerHTML = `
+    <h2>Data Karyawan</h2>
     <div class="pk-card" style="margin-bottom:24px;">
       <h3 style="margin-top:0;font-family:var(--font-title);" id="pkKyTitle">Tambah Karyawan</h3>
       <div class="pk-flex">
-        <div class="pk-field"><label>Nama</label><input id="pkKyNama"></div>
-        <div class="pk-field"><label>Jabatan</label><input id="pkKyJabatan"></div>
-        <div class="pk-field"><label>No HP</label><input id="pkKyHp"></div>
-        <div class="pk-field"><label>Gaji Pokok</label><input type="number" id="pkKyGaji"></div>
+        <div class="pk-field"><label>Nama Lengkap</label><input id="pkKyNama" placeholder="Nama karyawan"></div>
+        <div class="pk-field"><label>Jabatan / Posisi</label><input id="pkKyJabatan" placeholder="Kasir, Gudang, dll"></div>
+        <div class="pk-field"><label>No HP</label><input id="pkKyHp" placeholder="0812xxxxxxx"></div>
+        <div class="pk-field"><label>Gaji Pokok (Rp)</label><input type="number" id="pkKyGaji" placeholder="0"></div>
       </div>
       <div style="display:flex;gap:12px;margin-top:12px;">
         <button class="pk-btn" id="pkKyBtnSimpan" onclick="pkAddKaryawan()">Simpan Karyawan</button>
         <button class="pk-btn pk-btn-sec pk-hidden" id="pkKyBtnBatal" onclick="pkView_karyawan()">Batal</button>
       </div>
     </div>
-    <h3 style="margin-top:24px;">Daftar Karyawan</h3>
-    <table class="pk-table" style="margin-top:16px;">
-      <tr><th>Nama</th><th>Jabatan</th><th>No HP</th><th>Gaji Pokok</th><th>Status</th><th>Aksi</th></tr>
-      ${DB.karyawan.map(k=>`<tr>
-        <td data-label="Nama">${k.nama}</td>
-        <td data-label="Jabatan">${k.jabatan}</td>
-        <td data-label="No HP">${k.no_hp}</td>
-        <td data-label="Gaji Pokok">${pkFmt(k.gaji_pokok)}</td>
-        <td data-label="Status">${k.status}</td>
-        <td data-label="">
-          <button class="pk-btn pk-btn-sm pk-btn-blue" style="margin-right:4px;" onclick="pkLoadEditKaryawan(${k.id})">Edit</button>
-          <button class="pk-btn pk-btn-danger pk-btn-sm" onclick="pkDelKaryawan(${k.id})">Hapus</button>
-        </td>
-      </tr>`).join('')}
-    </table>
+    <div class="pk-list-group">
+      ${DB.karyawan.map(k=>{
+        const statusBadge = k.status==='aktif'
+          ? '<span class="pk-badge pk-badge-green">Aktif</span>'
+          : '<span class="pk-badge pk-badge-red">Nonaktif</span>';
+        return `<div class="pk-list-item">
+          <div class="pk-list-body">
+            <div class="pk-list-title">${k.nama} ${statusBadge}</div>
+            <div class="pk-list-desc">
+              Jabatan: <b>${k.jabatan||'-'}</b> &bull;
+              HP: ${k.no_hp||'-'} &bull;
+              Gaji: <b>${pkFmt(k.gaji_pokok)}</b> &bull;
+              Bergabung: ${k.tanggal_masuk||'-'}
+            </div>
+          </div>
+          <div class="pk-list-action">
+            <button class="pk-btn pk-btn-sm pk-btn-blue" onclick="pkLoadEditKaryawan(${k.id})">Edit</button>
+            <button class="pk-btn pk-btn-danger pk-btn-sm" onclick="pkDelKaryawan(${k.id})">Hapus</button>
+          </div>
+        </div>`;
+      }).join('') || '<div style="text-align:center;padding:24px;color:var(--text-muted);">Belum ada karyawan terdaftar</div>'}
+    </div>
   `;
 }
 function pkAddKaryawan(){
@@ -2242,18 +2276,30 @@ function pkView_laporan(){
   pkRunLaporan();
 }
 function pkRunLaporan(){
-  const t1 = document.getElementById('pkLapT1').value;
-  const t2 = document.getElementById('pkLapT2').value;
-  if(!t1||!t2) return pkShowToast('Pilih periode tanggal','error');
+  // Fixed: use correct field IDs (pkLapDari / pkLapSampai)
+  const t1 = (document.getElementById('pkLapDari') || document.getElementById('pkLapT1'))?.value;
+  const t2 = (document.getElementById('pkLapSampai') || document.getElementById('pkLapT2'))?.value;
+  if(!t1||!t2) return;
   
-  const list = DB.transaksi.filter(t=>t.tanggal.slice(0,10)>=t1 && t.tanggal.slice(0,10)<=t2);
+  const list = DB.transaksi.filter(t=>t.tanggal.slice(0,10)>=t1 && t.tanggal.slice(0,10)<=t2 && t.status_bayar !== 'batal');
   const totalOmzet = list.reduce((a,t)=>a+t.total,0);
-  const totalHPP = list.reduce((a,t)=>a+t.total_hpp,0);
+  
+  // Calculate HPP from transaksiDetail + produk
+  let totalHPP = 0;
+  list.forEach(t=>{
+    const detail = DB.transaksiDetail.filter(d=>d.transaksi_id===t.id);
+    detail.forEach(d=>{
+      const p = DB.produk.find(x=>x.id===d.produk_id);
+      if(p) totalHPP += (p.harga_beli||0) * d.qty;
+    });
+  });
   const kotor = totalOmzet - totalHPP;
   
+  // Count items sold
   let itemTerjual = 0;
   list.forEach(t=>{
-    t.items.forEach(i=>itemTerjual+=i.qty);
+    const detail = DB.transaksiDetail.filter(d=>d.transaksi_id===t.id);
+    detail.forEach(d=>{ itemTerjual += d.qty; });
   });
   
   const byMetode = {};
