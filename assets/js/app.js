@@ -543,38 +543,65 @@ function pkAddVarianRow(){
   `;
   document.getElementById('pkVarianList').appendChild(row);
 }
-function pkFilterProduk(q){
-  q = q.toLowerCase();
-  const list = DB.produk.filter(p=>p.nama.toLowerCase().includes(q) || p.kode.toLowerCase().includes(q));
-  document.getElementById('pkProdukTable').innerHTML = `
-    <tr><th>Kode</th><th>Nama</th><th>Kategori</th><th>Satuan</th><th>Harga Jual</th><th>Stok</th><th>Poin</th><th>Aksi</th></tr>
+function pkFilterProduk(){
+  const searchInput = document.getElementById('pkProdukSearch');
+  const catInput = document.getElementById('pkProdukCat');
+  
+  const q = searchInput ? searchInput.value.toLowerCase() : '';
+  const catFilter = catInput ? catInput.value : '';
+
+  let list = DB.produk.filter(p => p.nama.toLowerCase().includes(q) || p.kode.toLowerCase().includes(q));
+  
+  if (catFilter) {
+    const k = DB.kategori.find(x => x.nama === catFilter);
+    if (k) {
+      list = list.filter(p => p.kategori_id === k.id);
+    }
+  }
+
+  const container = document.getElementById('pkProdukTable');
+  if(!container) return;
+
+  container.innerHTML = `
+    <div class="pk-list-group">
     ${list.map(p=>{
       const kat = DB.kategori.find(k=>k.id===p.kategori_id);
       let st = p.stok; let isLow = p.stok<=p.stok_min;
       let pointsLabel = p.poin || 0;
+      
       if(p.has_varian && p.varian){
         st = p.varian.reduce((a,v)=>a+v.stok,0);
         isLow = p.varian.some(v=>v.stok<=p.stok_min);
         const pts = p.varian.map(v => `${v.nama}: ${v.poin||0}`).join(', ');
         pointsLabel = `<small style="color:var(--text-muted);">${pts}</small>`;
       }
-      const grosirLabel = p.min_grosir > 0 ? `<br><small style="color:#059669;">Grosir: ${pkFmt(p.harga_grosir)} (&#8805;${p.min_grosir})</small>` : '';
-      return `<tr>
-        <td data-label="Kode">${p.kode}</td>
-        <td data-label="Nama">${p.nama}${grosirLabel}</td>
-        <td data-label="Kategori">${kat?kat.nama:'-'}</td>
-        <td data-label="Satuan">${p.satuan}</td>
-        <td data-label="Harga Jual">${pkFmt(p.harga_jual)}</td>
-        <td data-label="Stok">${st} ${isLow?'<span class="pk-badge pk-badge-red">Menipis</span>':''}</td>
-        <td data-label="Poin">${pointsLabel}</td>
-        <td data-label="">
-          <button class="pk-btn pk-btn-sm pk-btn-blue" style="margin-right:4px;" onclick="pkLoadEditProduk(${p.id})">Edit</button>
-          <button class="pk-btn pk-btn-danger pk-btn-sm" onclick="pkDelProduk(${p.id})">Hapus</button>
-        </td>
-      </tr>`;
-    }).join('')}
+      
+      const grosirLabel = p.min_grosir > 0 ? `<span style="color:#059669;font-size:11px;font-weight:600;">Grosir: ${pkFmt(p.harga_grosir)} (&#8805;${p.min_grosir})</span>` : '';
+      const lowBadge = isLow ? '<span class="pk-badge pk-badge-red">Stok Menipis</span>' : '';
+      
+      return `
+      <div class="pk-list-item">
+        <div class="pk-list-body">
+          <div class="pk-list-title">${p.nama} <span style="font-size:12px;color:var(--text-muted);font-weight:normal;">(${p.kode})</span></div>
+          <div class="pk-list-desc" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+            <span>Kategori: <b>${kat?kat.nama:'-'}</b></span> &bull; 
+            <span>Harga: <b>${pkFmt(p.harga_jual)}</b>/${p.satuan}</span> &bull; 
+            <span>Stok: <b>${st}</b></span> &bull; 
+            <span>Poin: ${pointsLabel}</span>
+            ${grosirLabel ? `&bull; ${grosirLabel}` : ''}
+            ${lowBadge}
+          </div>
+        </div>
+        <div class="pk-list-action">
+          <button class="pk-btn pk-btn-sm pk-btn-blue" onclick="pkLoadEditProduk(${p.id})">Edit</button>
+          <button class="pk-btn pk-btn-sm pk-btn-danger" onclick="pkDelProduk(${p.id})">Hapus</button>
+        </div>
+      </div>`;
+    }).join('') || '<div style="text-align:center;padding:24px;color:var(--text-muted);">Tidak ada produk ditemukan</div>'}
+    </div>
   `;
 }
+
 function pkAddProduk(){
   let kode = document.getElementById('pkPrKode').value.trim();
   const nama = document.getElementById('pkPrNama').value.trim();
