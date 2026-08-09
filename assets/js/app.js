@@ -327,72 +327,59 @@ function pkView_dashboard(){
   const today = pkToday();
   const todayTrans = DB.transaksi.filter(t=>t.tanggal.slice(0,10)===today);
   const omzetToday = todayTrans.reduce((a,t)=>a+t.total,0);
-  // Varian-aware stok menipis
+  
   const stokMenipis = DB.produk.filter(p=>{
     if(p.status==='nonaktif') return false;
     const st = p.has_varian ? (p.varian||[]).reduce((a,v)=>a+v.stok,0) : p.stok;
     return st <= p.stok_min;
   });
+  
   const hutangBelumLunas = DB.hutang.filter(h=>h.status!=='lunas');
   const piutangBelumLunas = DB.piutang.filter(p=>p.status!=='lunas');
-  const hutangJatuhTempo = hutangBelumLunas.filter(h=>h.jatuh_tempo && h.jatuh_tempo<=today);
-  const piutangJatuhTempo = piutangBelumLunas.filter(p=>p.jatuh_tempo && p.jatuh_tempo<=today);
   const totalHutang = hutangBelumLunas.reduce((a,h)=>a+h.sisa,0);
   const totalPiutang = piutangBelumLunas.reduce((a,p)=>a+p.sisa,0);
 
   document.getElementById('pkMain').innerHTML = `
     <h2>Dashboard</h2>
+    
     <div class="pk-grid-dashboard" style="margin-bottom:24px;">
       <div style="background:linear-gradient(135deg,#0d9488,#0f766e);color:#fff;border-radius:16px;padding:20px;box-shadow:0 8px 20px -6px rgba(13,148,136,0.35);">
         <div style="font-size:11px;font-weight:700;opacity:0.85;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">💰 Omzet Hari Ini</div>
-    <div class="pk-grid-menu">
-      ${PK_MENUS.filter(m=>m.roles.includes(pkGetSession().role) && m.key!=='dashboard').map(m=>`
-        <div class="pk-grid-menu-btn" onclick="pkNav('${m.key}')">
-          <i data-lucide="${m.key==='transaksi'?'shopping-cart':m.key==='produk'?'package':m.key==='pelanggan'?'users':m.key==='pembelian'?'shopping-bag':m.key==='supplier'?'truck':m.key==='hutangpiutang'?'coins':m.key==='loyalty'?'gift':m.key==='karyawan'?'user-check':m.key==='laporan'?'trending-up':m.key==='pengaturan'?'settings':'database'}"></i>
-          <span>${m.label}</span>
-        </div>
-      `).join('')}
-    </div>
-
         <div style="font-size:22px;font-weight:800;font-family:var(--font-title);">${pkFmt(omzetToday)}</div>
         <div style="font-size:11px;opacity:0.75;margin-top:4px;">${todayTrans.length} transaksi</div>
       </div>
       <div style="background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;border-radius:16px;padding:20px;box-shadow:0 8px 20px -6px rgba(59,130,246,0.35);">
         <div style="font-size:11px;font-weight:700;opacity:0.85;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">🧾 Piutang Belum Lunas</div>
         <div style="font-size:22px;font-weight:800;font-family:var(--font-title);">${pkFmt(totalPiutang)}</div>
-        <div style="font-size:11px;opacity:0.75;margin-top:4px;">${piutangBelumLunas.length} transaksi${piutangJatuhTempo.length>0?` | <b>${piutangJatuhTempo.length} jatuh tempo!</b>`:''}</div>
+        <div style="font-size:11px;opacity:0.75;margin-top:4px;">${piutangBelumLunas.length} tagihan pelanggan</div>
       </div>
       <div style="background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff;border-radius:16px;padding:20px;box-shadow:0 8px 20px -6px rgba(239,68,68,0.35);">
         <div style="font-size:11px;font-weight:700;opacity:0.85;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">📤 Hutang ke Supplier</div>
         <div style="font-size:22px;font-weight:800;font-family:var(--font-title);">${pkFmt(totalHutang)}</div>
-        <div style="font-size:11px;opacity:0.75;margin-top:4px;">${hutangBelumLunas.length} tagihan${hutangJatuhTempo.length>0?` | <b>${hutangJatuhTempo.length} jatuh tempo!</b>`:''}</div>
+        <div style="font-size:11px;opacity:0.75;margin-top:4px;">${hutangBelumLunas.length} tagihan supplier</div>
       </div>
       <div style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border-radius:16px;padding:20px;box-shadow:0 8px 20px -6px rgba(245,158,11,0.35);">
         <div style="font-size:11px;font-weight:700;opacity:0.85;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">⚠️ Stok Menipis</div>
         <div style="font-size:22px;font-weight:800;font-family:var(--font-title);">${stokMenipis.length} Produk</div>
-        <div style="font-size:11px;opacity:0.75;margin-top:4px;">Butuh restok segera</div>
+        <div style="font-size:11px;opacity:0.75;margin-top:4px;">Perlu segera di-restok</div>
       </div>
     </div>
+
     ${stokMenipis.length ? `
-    <div class="pk-card" style="margin-top:8px;">
-      <h3 style="margin-top:0;margin-bottom:16px;font-family:var(--font-title);font-size:15px;display:flex;align-items:center;gap:8px;">
-        <span style="background:#fef3c7;color:#d97706;width:28px;height:28px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;">⚠</span>
-        Produk Stok Menipis
-      </h3>
-      <div class="pk-list-group">
-        ${stokMenipis.map(p=>{
-          const st = p.has_varian ? (p.varian||[]).reduce((a,v)=>a+v.stok,0) : p.stok;
-          return `<div class="pk-list-item">
-            <div class="pk-list-body">
-              <div class="pk-list-title">${p.nama} <span style="font-size:12px;color:var(--text-muted);font-weight:normal;">(${p.kode})</span></div>
-              <div class="pk-list-desc">Stok Tersisa: <b style="color:var(--danger);">${st}</b> (Min: ${p.stok_min})</div>
-            </div>
-            <div class="pk-list-action">
-              <span class="pk-badge pk-badge-red">Menipis</span>
-            </div>
-          </div>`;
-        }).join('')}
-      </div>
+    <h3 style="margin-top:32px;margin-bottom:16px;font-family:var(--font-title);font-size:16px;">Produk Stok Menipis</h3>
+    <div class="pk-list-group">
+      ${stokMenipis.map(p=>{
+        const st = p.has_varian ? (p.varian||[]).reduce((a,v)=>a+v.stok,0) : p.stok;
+        return `<div class="pk-list-item">
+          <div class="pk-list-body">
+            <div class="pk-list-title">${p.nama} <span style="font-size:12px;color:var(--text-muted);font-weight:normal;">(${p.kode})</span></div>
+            <div class="pk-list-desc">Stok Tersisa: <b style="color:var(--danger);">${st}</b> (Min: ${p.stok_min})</div>
+          </div>
+          <div class="pk-list-action">
+            <span class="pk-badge pk-badge-red">Menipis</span>
+          </div>
+        </div>`;
+      }).join('')}
     </div>` : `
     <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:12px;">
       <span style="font-size:20px;">✅</span>
@@ -401,24 +388,59 @@ function pkView_dashboard(){
   `;
 }
 
-/* ================= PRODUK & KATEGORI ================= */
-let pkProdukTab = 'produk';
 function pkView_produk(){
-  renderBody();
-  function renderBody(){
-    document.getElementById('pkMain').innerHTML = `
-      <h2>Produk & Kategori</h2>
-      <div class="pk-tabs">
-        <div class="pk-tab ${pkProdukTab==='produk'?'active':''}" onclick="pkProdukTab='produk';pkView_produk()">Produk</div>
-        <div class="pk-tab ${pkProdukTab==='kategori'?'active':''}" onclick="pkProdukTab='kategori';pkView_produk()">Kategori</div>
+  document.getElementById('pkMain').innerHTML = `
+    <h2>Produk & Kategori</h2>
+
+    <div class="pk-card" style="margin-bottom:32px;">
+      <h3 style="margin-top:0;font-family:var(--font-title);font-size:16px;">Manajemen Kategori</h3>
+      <div class="pk-flex" style="align-items:flex-end;margin-bottom:16px;">
+        <div class="pk-field" style="margin-bottom:0;flex:1;">
+          <input id="pkKatNama" placeholder="Kategori Baru (Contoh: Semen)">
+        </div>
+        <div style="flex:0 0 auto;"><button class="pk-btn" onclick="pkAddKategori()">Tambah Kategori</button></div>
       </div>
-      <div id="pkProdukBody"></div>
-    `;
-    if(pkProdukTab==='produk') pkRenderProdukList(); else pkRenderKategoriList();
+      <div id="pkKategoriList"></div>
+    </div>
+
+    <h3 style="margin-bottom:16px;font-family:var(--font-title);font-size:16px;">Daftar Produk</h3>
+    <div class="pk-flex" style="align-items:flex-end;">
+      <div class="pk-field" style="margin-bottom:0;flex:1;">
+        <label>Cari Produk</label>
+        <div style="position:relative;">
+          <input id="pkProdukSearch" onkeyup="pkFilterProduk()" placeholder="Ketik nama atau kode..." style="padding-left:40px;">
+          <i data-lucide="search" style="position:absolute;left:12px;top:14px;color:#94a3b8;width:18px;height:18px;"></i>
+        </div>
+      </div>
+      <div class="pk-field" style="margin-bottom:0;flex:1;">
+        <label>Kategori</label>
+        <select id="pkProdukCat" onchange="pkFilterProduk()">
+          <option value="">Semua Kategori</option>
+        </select>
+      </div>
+      <div style="flex:0 0 auto;">
+        <button class="pk-btn" onclick="pkLoadEditProduk(0)">+ Tambah Produk</button>
+      </div>
+    </div>
+    
+    <div id="pkProdukTable"></div>
+  `;
+  pkRenderKategoriList();
+  
+  const catSel = document.getElementById('pkProdukCat');
+  if(catSel){
+    DB.kategori.forEach(k=>{
+      const opt = document.createElement('option');
+      opt.value = k.nama; opt.innerText = k.nama;
+      catSel.appendChild(opt);
+    });
   }
+  pkFilterProduk();
+  if(typeof lucide !== 'undefined') lucide.createIcons();
 }
+
 function pkRenderKategoriList(){
-  document.getElementById('pkProdukBody').innerHTML = `
+  if(document.getElementById('pkKategoriList')) document.getElementById('pkKategoriList').innerHTML = `
     <div class="pk-card" style="margin-bottom:24px;">
       <h3 style="margin-top:0;font-family:var(--font-title);">Tambah Kategori</h3>
       <div class="pk-flex" style="align-items:flex-end;">
@@ -457,7 +479,7 @@ let pkEditProdukId = null;
 function pkRenderProdukList(){
   pkEditProdukId = null;
   const opts = DB.kategori.map(k=>`<option value="${k.id}">${k.nama}</option>`).join('');
-  document.getElementById('pkProdukBody').innerHTML = `
+  if(document.getElementById('pkKategoriList')) document.getElementById('pkKategoriList').innerHTML = `
     <div class="pk-card" style="margin-bottom:24px;">
       <h3 style="margin-top:0;font-family:var(--font-title);" id="pkPrTitle">Tambah Produk</h3>
       <div class="pk-flex">
@@ -789,120 +811,156 @@ function pkRenderTransaksi(){
   const custOpts = DB.pelanggan.map(c=>`<option value="${c.id}">${c.nama} (poin: ${c.poin})</option>`).join('');
 
   if(pkTrStep === 'produk'){
-    const categoryTabs = `
-      <div id="pkTrCategoryTabs" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:12px;margin-bottom:16px;scrollbar-width:none;-webkit-overflow-scrolling:touch;">
-        <button id="pkTab-all" class="pk-tab-btn ${pkTrCategory==='all'?'active':''}" onclick="pkSelectTrCategory('all')">Semua</button>
-        ${DB.kategori.map(k=>`<button id="pkTab-${k.id}" class="pk-tab-btn ${pkTrCategory===k.id.toString()?'active':''}" onclick="pkSelectTrCategory(${k.id})">${k.nama}</button>`).join('')}
+    const categorySelect = `
+      <div class="pk-field" style="margin-bottom:16px;">
+        <select id="pkTrCategoryTabs" onchange="pkSelectTrCategory(this.value)">
+          <option value="all" ${pkTrCategory==='all'?'selected':''}>Semua Kategori</option>
+          ${DB.kategori.map(k=>`<option value="${k.id}" ${pkTrCategory===k.id.toString()?'selected':''}>${k.nama}</option>`).join('')}
+        </select>
       </div>
     `;
     
     main.innerHTML = `
       <h2>Pilih Produk</h2>
-      <input class="pk-search-box" id="pkTrSearch" placeholder="Cari produk (nama/kode)..." oninput="pkTrSearchProduk(this.value)">
-      ${categoryTabs}
+      <div class="pk-flex" style="gap:12px;margin-bottom:16px;">
+        <div style="flex:1;">
+          <input class="pk-search-box" style="margin-bottom:0;" id="pkTrSearch" placeholder="Cari produk (nama/kode)..." oninput="pkTrSearchProduk(this.value)">
+        </div>
+        <div style="flex:1;">
+          ${categorySelect}
+        </div>
+      </div>
+      
       <div id="pkTrProdukList" style="min-height:300px;max-height:calc(100vh - 280px);overflow-y:auto;padding:4px 2px 80px;"></div>
       
       <!-- Floating Cart Button -->
       <div style="position:fixed;bottom:24px;right:24px;z-index:999;">
         <button class="pk-btn" onclick="pkTrGoToStep('keranjang')" style="border-radius:50px;padding:16px 24px;box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:10px;font-size:15px;font-weight:700;">
           <i data-lucide="shopping-cart" style="width:20px;height:20px;"></i>
-          <span>Keranjang</span>
-          <span id="pkTrCartBadge" style="background:#ffffff;color:var(--primary);border-radius:20px;padding:2px 8px;font-size:12px;font-weight:800;">0</span>
+          Keranjang (<span id="pkCartCount" style="background:#fff;color:var(--primary);border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;">${pkCart.reduce((a,c)=>a+c.qty,0)}</span>)
         </button>
       </div>
     `;
     pkTrSearchProduk('');
+  }
+  else if(pkTrStep === 'keranjang'){
+    let cartHtml = '';
+    let subtotal = 0;
     
-  } else if(pkTrStep === 'keranjang'){
+    if(pkCart.length === 0){
+      cartHtml = '<div style="text-align:center;padding:40px;color:var(--text-muted);">Keranjang kosong</div>';
+    }else{
+      cartHtml = '<div class="pk-list-group">';
+      pkCart.forEach((c,i)=>{
+        const itemTotal = c.harga * c.qty;
+        subtotal += itemTotal;
+        cartHtml += `
+          <div class="pk-list-item">
+            <div class="pk-list-body">
+              <div class="pk-list-title">${c.nama} <span style="color:var(--text-muted);font-weight:normal;font-size:13px;">${c.varian?`(${c.varian})`:''}</span></div>
+              <div class="pk-list-desc">Harga: ${pkFmt(c.harga)} &bull; Subtotal: <b style="color:var(--primary);">${pkFmt(itemTotal)}</b></div>
+            </div>
+            <div class="pk-list-action" style="display:flex;align-items:center;gap:8px;">
+              <button class="pk-btn pk-btn-sec pk-btn-sm" style="padding:4px 10px;" onclick="pkUpdateCartQty(${i}, ${c.qty-1})">-</button>
+              <span style="font-weight:700;width:30px;text-align:center;">${c.qty}</span>
+              <button class="pk-btn pk-btn-sec pk-btn-sm" style="padding:4px 10px;" onclick="pkUpdateCartQty(${i}, ${c.qty+1})">+</button>
+            </div>
+          </div>
+        `;
+      });
+      cartHtml += '</div>';
+    }
+    
     main.innerHTML = `
-      <h2>Keranjang Belanja</h2>
-      <button class="pk-btn pk-btn-sec" onclick="pkTrGoToStep('produk')" style="margin-bottom:16px;display:inline-flex;align-items:center;gap:8px;">
-        <i data-lucide="arrow-left" style="width:16px;height:16px;"></i> Tambah Produk Lain
-      </button>
-      <div id="pkCartBox" class="pk-card" style="margin-bottom:20px;"></div>
-      
-      <div class="pk-card" style="margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;padding:16px 20px;">
-        <span style="font-weight:700;font-size:15px;color:var(--text-muted);">Subtotal Belanja:</span>
-        <span id="pkTrSubtotalVal" style="font-size:20px;font-weight:800;color:var(--primary);font-family:var(--font-title);">Rp 0</span>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+        <button class="pk-btn pk-btn-sec" onclick="pkTrGoToStep('produk')" style="padding:8px 12px;"><i data-lucide="arrow-left"></i></button>
+        <h2 style="margin:0;">Keranjang</h2>
       </div>
       
-      <button class="pk-btn" onclick="pkTrGoToStep('pelanggan')" style="width:100%;padding:14px;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px;">
-        Lanjut ke Pembayaran <i data-lucide="arrow-right" style="width:16px;height:16px;"></i>
-      </button>
+      ${cartHtml}
+      
+      ${pkCart.length>0 ? `
+      <div class="pk-card" style="margin-top:24px;position:sticky;bottom:24px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:12px;font-size:16px;">
+          <span>Subtotal</span>
+          <span style="font-weight:700;">${pkFmt(subtotal)}</span>
+        </div>
+        <button class="pk-btn pk-btn-large" onclick="pkTrGoToStep('pembayaran')">Lanjut ke Pembayaran</button>
+      </div>` : ''}
     `;
-    
-  } else if(pkTrStep === 'pelanggan'){
+  }
+  else if(pkTrStep === 'pembayaran'){
     const subtotal = pkCart.reduce((a,c)=>a+c.harga*c.qty,0);
-    const diskon = Number(document.getElementById('pkTrDiskon')?.value||0);
-    const total = Math.max(0, subtotal - diskon);
+    const diskon = 0; // Default 0
+    const total = subtotal - diskon;
     
     main.innerHTML = `
-      <h2>Pelanggan & Pembayaran</h2>
-      <button class="pk-btn pk-btn-sec" onclick="pkTrGoToStep('keranjang')" style="margin-bottom:16px;display:inline-flex;align-items:center;gap:8px;">
-        <i data-lucide="arrow-left" style="width:16px;height:16px;"></i> Kembali ke Keranjang
-      </button>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+        <button class="pk-btn pk-btn-sec" onclick="pkTrGoToStep('keranjang')" style="padding:8px 12px;"><i data-lucide="arrow-left"></i></button>
+        <h2 style="margin:0;">Pembayaran</h2>
+      </div>
       
-      <div class="pk-card" style="margin-bottom:20px;">
-        <div class="pk-field">
-          <label>Pelanggan</label>
-          <select id="pkTrPelanggan" onchange="pkTrUpdateGiftDropdown()">${custOpts}</select>
-        </div>
-        
-        <!-- Poin Gift Claims Section -->
-        <div class="pk-field" id="pkTrGiftRedeemField">
-          <label>Klaim Hadiah Loyalty</label>
-          <select id="pkTrGiftSelect" onchange="pkTrSelectGift(this.value)">
-            <option value="">-- Pilih Hadiah (Tidak Klaim) --</option>
-          </select>
-          <div id="pkTrGiftInfo" style="font-size:12px;font-weight:700;color:var(--success);margin-top:6px;display:none;"></div>
-        </div>
-
-        <div class="pk-field">
-          <label>Diskon (Rp)</label>
-          <input type="number" id="pkTrDiskon" value="0" oninput="pkRenderCart()">
-        </div>
-        <div class="pk-field">
-          <label>Metode Bayar</label>
-          <select id="pkTrMetode" onchange="pkTrOnMetodeChange(this.value)">
-            <option value="tunai">Tunai</option>
-            <option value="transfer">Transfer</option>
-            <option value="qris">QRIS</option>
-            <option value="piutang">Piutang (belum lunas)</option>
-          </select>
-        </div>
-        
-        <!-- Tunai Bayar & Kembalian Wrapper -->
-        <div id="pkCashFieldWrapper" style="display:block;">
+      <div class="pk-flex">
+        <div class="pk-card" style="flex:2;">
+          <h3 style="margin-top:0;">Detail Pelanggan</h3>
           <div class="pk-field">
-            <label>Uang Diterima (Rp)</label>
-            <input type="number" id="pkTrBayar" value="${total}" oninput="pkCalcKembalian()">
+            <label>Pelanggan (Opsional)</label>
+            <select id="pkTrPelanggan" onchange="pkTrPelangganChange(this.value)">
+              <option value="">Umum (Tanpa Poin)</option>
+              ${custOpts}
+            </select>
           </div>
-          <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-top:-6px;margin-bottom:8px;">Rekomendasi Uang:</label>
-          <div id="pkCashSuggestions" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
-            ${pkGetCashSuggestions(total)}
+          
+          <h3 style="margin-top:24px;">Rincian Harga</h3>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;color:var(--text-muted);">
+            <span>Subtotal</span>
+            <span>${pkFmt(subtotal)}</span>
           </div>
-          <div style="margin-top:12px;padding:12px 0;border-top:1px dashed var(--border);font-size:15px;font-weight:700;color:var(--text-main);display:flex;justify-content:space-between;">
-            <span>Kembalian:</span>
-            <span id="pkTrKembalian">Rp 0</span>
+          <div class="pk-field" style="margin-bottom:16px;">
+            <label>Diskon (Rp)</label>
+            <input type="number" id="pkTrDiskon" value="0" oninput="pkCalcKembalian()">
           </div>
+          <div style="display:flex;justify-content:space-between;padding-top:16px;border-top:2px dashed var(--border);margin-bottom:24px;font-size:18px;">
+            <span style="font-weight:600;">Total Bayar</span>
+            <span style="font-weight:800;color:var(--primary);" id="pkTrTotalDisplay">${pkFmt(total)}</span>
+          </div>
+          
+          <div class="pk-field">
+            <label>Metode Pembayaran</label>
+            <select id="pkTrMetode" onchange="pkTrMetodeChange(this.value)">
+              <option value="tunai">Tunai / Cash</option>
+              <option value="edc">Kartu / EDC</option>
+              <option value="transfer">Transfer Bank</option>
+              <option value="qris">QRIS</option>
+              <option value="piutang">Piutang (Tempo)</option>
+            </select>
+          </div>
+          
+          <div id="pkTrBayarWrap">
+            <div class="pk-field">
+              <label>Nominal Diterima</label>
+              <input type="number" id="pkTrBayar" oninput="pkCalcKembalian()" placeholder="0">
+            </div>
+            
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;" id="pkTrCashSuggestions">
+              ${pkGetCashSuggestions(total)}
+            </div>
+            
+            <div style="display:flex;justify-content:space-between;padding:16px;background:#f8fafc;border-radius:var(--radius-md);border:1px solid var(--border);margin-bottom:24px;">
+              <span style="font-weight:600;">Kembalian</span>
+              <span style="font-weight:800;color:var(--success);font-size:20px;" id="pkTrKembalian">Rp 0</span>
+            </div>
+          </div>
+          
+          <button class="pk-btn pk-btn-large" onclick="pkTrSelesaikan()">Selesaikan Transaksi</button>
         </div>
-
-        <div style="margin:20px 0 16px;padding-top:16px;border-top:1px solid var(--border);font-size:16px;font-weight:800;font-family:var(--font-title);color:var(--primary);display:flex;justify-content:space-between;">
-          <span>Total Bayar:</span>
-          <span id="pkTrTotal">Rp 0</span>
-        </div>
-        <button class="pk-btn" style="width:100%;padding:14px;" onclick="pkCheckout()">Proses & Cetak Struk</button>
       </div>
     `;
+    pkCalcKembalian(); // initial calc
   }
   
-  pkRenderCart();
-  if(pkTrStep === 'pelanggan'){
-    pkTrUpdateGiftDropdown();
-  }
+  if(typeof lucide !== 'undefined') lucide.createIcons();
 }
-
-let pkTrClaimedGiftId = null;
 
 function pkTrUpdateGiftDropdown(){
   const pelangganId = Number(document.getElementById('pkTrPelanggan')?.value||0);
@@ -1846,22 +1904,22 @@ function pkSimpanPembelian(){
 /* ================= HUTANG & PIUTANG ================= */
 let pkHpTab = 'hutang';
 function pkView_hutangpiutang(){
-  renderShell();
-  function renderShell(){
-    document.getElementById('pkMain').innerHTML = `
-      <h2>Hutang & Piutang</h2>
-      <div class="pk-tabs">
-        <div class="pk-tab ${pkHpTab==='hutang'?'active':''}" onclick="pkHpTab='hutang';pkView_hutangpiutang()">Hutang (ke Supplier)</div>
-        <div class="pk-tab ${pkHpTab==='piutang'?'active':''}" onclick="pkHpTab='piutang';pkView_hutangpiutang()">Piutang (dari Pelanggan)</div>
-      </div>
-      <div id="pkHpBody"></div>
-    `;
-    if(pkHpTab==='hutang') pkRenderHutang(); else pkRenderPiutang();
-  }
+  document.getElementById('pkMain').innerHTML = `
+    <h2>Hutang & Piutang</h2>
+    
+    <h3 style="margin-top:24px;margin-bottom:16px;font-family:var(--font-title);font-size:16px;color:var(--danger);">Daftar Hutang (ke Supplier)</h3>
+    <div id="pkHutangList"></div>
+    
+    <h3 style="margin-top:40px;margin-bottom:16px;font-family:var(--font-title);font-size:16px;color:var(--primary);">Daftar Piutang (Pelanggan)</h3>
+    <div id="pkPiutangList"></div>
+  `;
+  pkRenderHutang();
+  pkRenderPiutang();
 }
+
 function pkRenderHutang(){
   const today = pkToday();
-  document.getElementById('pkHpBody').innerHTML = `
+  if(document.getElementById('pkHutangList')) document.getElementById('pkHutangList').innerHTML = `
     <div class="pk-list-group">
     ${DB.hutang.slice().reverse().map(h=>{
       const supp = DB.supplier.find(x=>x.id===h.supplier_id);
@@ -1906,7 +1964,7 @@ function pkBayarHutang(hutangId){
 }
 function pkRenderPiutang(){
   const today = pkToday();
-  document.getElementById('pkHpBody').innerHTML = `
+  if(document.getElementById('pkHutangList')) document.getElementById('pkHutangList').innerHTML = `
     <div class="pk-list-group">
     ${DB.piutang.slice().reverse().map(p=>{
       const pel = DB.pelanggan.find(x=>x.id===p.pelanggan_id);
